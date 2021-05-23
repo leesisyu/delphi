@@ -1,0 +1,3715 @@
+unit uMain;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ComCtrls, RzTabs, ImgList, dxBar, dxBarExtItems, StdCtrls,
+  iComponent, iVCLComponent, iLed, iLedRound, LMDShBase, LMDShFolder,
+  Psock, ExtCtrls, iSevenSegmentDisplay, ShellApi,
+  iSevenSegmentClock, RzPanel, RzSplit, LMDCustomComponent, LMDSysInfo,
+  WinSkinData, rxPlacemnt, LMDShController, cxClasses, iCustomComponent,
+  AdvEdit, AdvEdBtn, AdvDirectoryEdit, IdBaseComponent, IdComponent,
+  IdRawBase, IdRawClient, IdIcmpClient, FileCtrl, RzLstBox, RzChkLst,
+  RzTreeVw, IdTCPConnection, IdTCPClient, IdFTP, RzFilSys, SHDocVw, MSHTML, ActiveX,
+  Buttons, RzBorder, iTimers, iThreadTimers, IdHTTP, IdIOHandler,
+  IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL;
+
+const MAX_FTPSEND_WAITING_TIME = 30 * 1000;
+const MAX_FTPCONNECT_WAITING_TIME = 30;
+const MAX_FTPDISCONNECT_WAITING_TIME = 5 * 1000;
+
+type
+  TFTPTransFileDescTab = record
+    FCurrFileIndex: Integer;
+    FCurrSendFile: string;
+    FIsConnectedOk: Boolean;
+    FIsCuurFileSendOk: Boolean;
+    FIsTransComplete: Boolean;
+
+    TotalCount: Integer;
+    FileCount: Integer;
+    PrevNo: Integer;
+    CurrNo: Integer;
+    StartNo: Integer;
+    EndNo: Integer;
+    FTransFileList: TStringList;
+  end;
+
+  TfrmMain = class(TForm)
+    StatusBar1: TStatusBar;
+    dxBarManager1: TdxBarManager;
+    dxBarLargeButton2: TdxBarLargeButton;
+    dxBarLargeButton12: TdxBarLargeButton;
+    dxBarLargeButton17: TdxBarLargeButton;
+    dxBarLargeButton1: TdxBarLargeButton;
+    dxBarLargeButton3: TdxBarLargeButton;
+    ImageList2: TImageList;
+    RzPageControl1: TRzPageControl;
+    TabSheet1: TRzTabSheet;
+    TabSheet2: TRzTabSheet;
+    LMDShellFolder1: TLMDShellFolder;
+    FormStorage1: TFormStorage;
+    OpenDialog1: TOpenDialog;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    Panel1: TPanel;
+    dxBarDockControl1: TdxBarDockControl;
+    RzSplitter1: TRzSplitter;
+    TabSheet5: TRzTabSheet;
+    Panel7: TPanel;
+    Button8: TButton;
+    Button9: TButton;
+    Button11: TButton;
+    ListBox2: TListBox;
+    Panel10: TPanel;
+    GroupBox1: TGroupBox;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    HostTxt: TEdit;
+    PortTxt: TEdit;
+    UserTxt: TEdit;
+    PassTxt: TEdit;
+    iLedRound1: TiLedRound;
+    Button3: TButton;
+    Button2: TButton;
+    Label1: TLabel;
+    Edit1: TEdit;
+    Button1: TButton;
+    Button10: TButton;
+    Edit22: TEdit;
+    Button7: TButton;
+    Label10: TLabel;
+    RemoteTxt: TEdit;
+    Label11: TLabel;
+    LocalTxt: TEdit;
+    Button12: TButton;
+    Button14: TButton;
+    LMDSysInfo1: TLMDSysInfo;
+    Button15: TButton;
+    Edit6: TEdit;
+    iLedRound2: TiLedRound;
+    DirectoryListBox1: TDirectoryListBox;
+    FileListBox1: TFileListBox;
+    TabSheet7: TRzTabSheet;
+    RzSplitter2: TRzSplitter;
+    Panel12: TPanel;
+    Panel18: TPanel;
+    Panel19: TPanel;
+    lstWebsiteItems: TListBox;
+    Button18: TButton;
+    Panel9: TPanel;
+    Splitter2: TSplitter;
+    Panel4: TPanel;
+    lstFtpServerItems: TListBox;
+    lstFtpUploadItems: TListBox;
+    Panel6: TPanel;
+    Panel11: TPanel;
+    Button19: TButton;
+    mmStatus: TMemo;
+    Label13: TLabel;
+    edWebsiteRunInteveral: TEdit;
+    Label27: TLabel;
+    iSevenSegmentClock2: TiSevenSegmentClock;
+    iSevenSegmentClock3: TiSevenSegmentClock;
+    Label28: TLabel;
+    edFtpRunInteveral: TEdit;
+    Label29: TLabel;
+    mmTest: TMemo;
+    Panel13: TPanel;
+    Panel5: TPanel;
+    Button20: TButton;
+    Button21: TButton;
+    Panel8: TPanel;
+    Button22: TButton;
+    lstFtpServerUploadItems: TListBox;
+    Splitter3: TSplitter;
+    fFtpFileItems: TRzFileListBox;
+    Panel35: TPanel;
+    AdvDirectoryEdit1: TAdvDirectoryEdit;
+    Panel36: TPanel;
+    SpeedButton6: TSpeedButton;
+    Splitter6: TSplitter;
+    Panel14: TPanel;
+    Panel15: TPanel;
+    edUrl: TEdit;
+    Label6: TLabel;
+    Button4: TButton;
+    Button5: TButton;
+    Button6: TButton;
+    Button13: TButton;
+    fFileItems: TRzFileListBox;
+    lbTemp: TLabel;
+    Panel16: TPanel;
+    ckbAutoStartSrv: TCheckBox;
+    fFtpUploadFileItems: TRzFileListBox;
+    TimUploadScan: TTimer;
+    TimInit: TTimer;
+    ckbPing: TCheckBox;
+    Label8: TLabel;
+    edConfigDataDir: TAdvDirectoryEdit;
+    CheckBox1: TCheckBox;
+    ckbCurlMode: TCheckBox;
+    Button16: TButton;
+    Memo1: TMemo;
+    mmFtpTxt: TMemo;
+    iSevenSegmentClock1: TRzLEDDisplay;
+    fFtpConfigFileItems: TRzFileListBox;
+    fWebConfigFileItems: TRzFileListBox;
+    Timer2: TiThreadTimers;
+    TimFtp: TiThreadTimers;
+    TimWeb: TiThreadTimers;
+    RzSplitter3: TRzSplitter;
+    lstUrlUploadItems: TListBox;
+    lstSubUrlItems: TListBox;
+    lbUrlTemp: TLabel;
+    RzPageControl2: TRzPageControl;
+    TabSheet3: TRzTabSheet;
+    TabSheet4: TRzTabSheet;
+    mmWebsiteInfo: TMemo;
+    mmWPSrc: TMemo;
+    ckbDownCurlMode: TCheckBox;
+    lbWB: TLabel;
+    lbFtp: TLabel;
+    ckbAddSelfIP: TCheckBox;
+    TabSheet6: TRzTabSheet;
+    LLTJ: TLabeledEdit;
+    lbledtURL: TLabeledEdit;
+    SpeedButton1: TSpeedButton;
+    IdHTTP1: TIdHTTP;
+    IdHTTP2: TIdHTTP;
+    IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL;
+    lbll: TLabeledEdit;
+
+    procedure FormCreate(Sender: TObject);
+
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure Button3Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Button10Click(Sender: TObject);
+    procedure Timer2Timer(Sender: TObject);
+    procedure dxBarLargeButton17Click(Sender: TObject);
+    procedure TimWebTimer(Sender: TObject);
+    procedure dxBarLargeButton3Click(Sender: TObject);
+    procedure Button8Click(Sender: TObject);
+    procedure Button9Click(Sender: TObject);
+    procedure Button11Click(Sender: TObject);
+    procedure ListBox2Click(Sender: TObject);
+    procedure Button12Click(Sender: TObject);
+    procedure dxBarLargeButton12Click(Sender: TObject);
+    procedure Button14Click(Sender: TObject);
+    procedure CheckBox4Click(Sender: TObject);
+    procedure Button15Click(Sender: TObject);
+    procedure Button18Click(Sender: TObject);
+    procedure Button19Click(Sender: TObject);
+    procedure IdIcmpClient1Reply(ASender: TComponent; const AReplyStatus:
+      TReplyStatus);
+    procedure dxBarLargeButton1Click(Sender: TObject);
+    procedure TimFtpTimer(Sender: TObject);
+    procedure Button21Click(Sender: TObject);
+    procedure Button22Click(Sender: TObject);
+    procedure Button20Click(Sender: TObject);
+    procedure SpeedButton6Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
+    procedure Button5Click(Sender: TObject);
+    procedure Button6Click(Sender: TObject);
+    procedure Button13Click(Sender: TObject);
+    procedure TimUploadScanTimer(Sender: TObject);
+    procedure dxBarLargeButton2Click(Sender: TObject);
+    procedure TimInitTimer(Sender: TObject);
+    procedure Button16Click(Sender: TObject);
+    procedure edUrlClick(Sender: TObject);
+    procedure lstUrlUploadItemsClick(Sender: TObject);
+    procedure lstWebsiteItemsClick(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    FIsWebWorking: Boolean;
+    FIsFtpWorking: Boolean;
+    FIsUploadScanWorking: Boolean;
+    FIsServerEnabled: Boolean;
+
+    StrList: TStringList;
+    Str_List: TStringList;
+    StrWords: TStringList;
+    StrSubUrlItems: TStringList;
+
+    IEAppObj: OleVariant;
+    FIEFrameWnd: THandle;
+
+    szLog, szAppPath, FCurrTaskFileName: string;
+    szTodoTaskDir: string;
+    dtStartTime, dtTaskStartTime: double;
+    IsFTPConnected, IsSendOk, IsShowTaskTime: Boolean;
+    mmStream: TMemoryStream;
+    mmStreams: array[0..20] of TMemoryStream;
+    strResults: array[0..20] of TStringList;
+    StrTaskResult: TStringList;
+
+    CMDChildWnd: HWnd;
+    FTPExecuteCompleted, FBusying, FTPTaskExecuteCompleted: Boolean;
+    FTP_ResultBuffer: array[0..2048] of Byte;
+    FTPResultBuffer: array of Byte;
+
+    StrHisWMVDirList: TStringList;
+    StrUpFileList: TStringList;
+    StrThrdSendFileList: TStringList;
+
+    FServerStartTime: Cardinal;
+    fFtpStartTime, fWebStartTime: TDateTime;
+
+    FPrevServerExists: Boolean;
+    FIsServerExists: Boolean;
+
+    bScanTask: Boolean;
+    szTodoTskFilePath: string;
+
+    { Public declarations }
+    //自动循环访问 子网页列表
+    procedure AutoExecWebsiteItems;
+    //开始访问
+    procedure StartExecWebsiteItems;
+    //创建访问网站的bat文件并保存到本地
+    procedure CreateCurlBatFileEx(szUrl: string);
+    //获取子网页
+    procedure ExtractWebsiteSubItems(szUrl: string);
+
+
+    //从本地文件载入 之前设置好的子网页列表
+    procedure LoadWebsiteItemsFromFile;
+    procedure LoadFtpDataItemsFromFile;
+    procedure CopyFtpUploadConfigFiles;
+
+    procedure StartExecFtpItems;
+    procedure AutoExecFtpItems;
+    function AutoUploadFileToServer(szFileName, szSrvIp, szSrvUserName, szsrvPSW: string): Integer;
+    function AutoUploadConfigFileToServer(szFileName, szSrvIp, szSrvUserName, szsrvPSW: string; nFileType: Integer = 2): Integer;
+    procedure InitUploadConfigDataToFtpServer();
+    function UploadConfigDataToFtpServer(szServerIP, szUser, szPSW: string): Integer;
+
+    procedure CreateFtpBatFileEx;
+    procedure CreateFtpTxtFileEx(szFileName, szIPAddr, szSrvUserName, szsrvPSW: string);
+    procedure CreateFtpConfigDataFileEx(szFileName, szIPAddr, szSrvUserName, szsrvPSW: string; nFileType: Integer = 2);
+    procedure CreateFtpConnectSrvEx(szIPAddr, szSrvUserName, szsrvPSW: string);
+    procedure CreateFtpSendFileToSrvEx(szFileName, szIPAddr, szSrvUserName, szsrvPSW: string);
+    procedure CreateFtpDeleteFileFromSrvEx(szFileName, szIPAddr, szSrvUserName, szsrvPSW: string);
+    procedure CreateDownloadFileFromSrvEx(szFileName, szLocalFileName, szIPAddr, szSrvUserName, szsrvPSW: string);
+    procedure CreateFtpListFileFromSrvEx(szIPAddr, szSrvUserName, szsrvPSW: string);
+    procedure CreateFtpDeleteAllFilesFromSrvEx(szIPAddr, szSrvUserName, szsrvPSW: string);
+
+    procedure KillFtpExeTask;
+    procedure FTPDisConnectServer;
+    procedure FTPConnectServer(sHost, sPort, sUser, sPsw: string);
+    procedure FTPUploadFile(szFileName, sHost, sPort, sUser, sPsw: string);
+    procedure FTPServeFileList(sHost, sPort, sUser, sPsw: string);
+    procedure FTPServeDeleteAllFiles(sHost, sPort, sUser, sPsw: string);
+    procedure FTPServeDeleteFile(szFileName, sHost, sPort, sUser, sPsw: string);
+    procedure FTPDownloadFile(szFileName, szLocalFileName, sHost, sPort, sUser, sPsw: string);
+
+    procedure AddLog(szLog: string);
+    //增加网页运行日志
+    procedure AddWebLog(szLog: string);
+
+    //----multi-files send mode-------------------------
+    procedure PingFtpServer(szIPAddr: string);
+    procedure ClearFtpDataDir;
+    procedure ClearRmtFtpDataDir;
+    procedure ClearFtpDataConfigDir;
+    procedure CopyFilesToFtpDataDir;
+    procedure CopyFilesToFtpDataConfigDir;
+    //保存子网页到文件 程序路径\WskData\wsItems.dat
+    procedure SaveWebSiteItemsToFile(bConfigData: Boolean = False);
+    procedure SaveFtpServerItemsToFile(bConfigData: Boolean = False);
+
+    procedure BringVideoWndToTop(szWndName: string);
+    //延时
+    procedure Delay(ms: Integer);
+    function MinimizedCMDWnd(szTitle: string): Boolean;
+
+    procedure CheckResult(b: Boolean);
+    function RunDOS(const CommandLine: string): string;
+    Function VisitHttps(Url:string):string;
+    function GetUrlFileSize(aURL: string): string;
+  end;
+
+var
+  frmMain: TfrmMain;
+
+implementation
+
+uses uIEAutoUtil, uFrmFtpAccountDlg;
+
+{$R *.dfm}
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+var
+  I: Integer;
+  szTxt, szDir: string;
+begin
+  Caption := Application.Title;
+  RzPageControl1.ActivePageIndex := 1;
+
+  FormStorage1.RestoreFormPlacement;
+
+  szAppPath := ExtractFileDir(Application.ExeName);
+
+  szDir := szAppPath + '\' + 'WskData';
+  if not DirectoryExists(szDir) then
+    MkDir(szDir);
+
+  szDir := szAppPath + '\' + 'FtpConfigData';
+  if not DirectoryExists(szDir) then
+    MkDir(szDir);
+
+  AdvDirectoryEdit1.Text := szDir;
+  SpeedButton6Click(nil);
+
+  szDir := szAppPath + '\' + 'FtpData';
+  if not DirectoryExists(szDir) then
+    MkDir(szDir);
+
+  CreateFtpBatFileEx();
+
+  StrList := TStringList.Create;
+  Str_List := TStringList.Create;
+  StrWords := TStringList.Create;
+  StrSubUrlItems := TStringList.Create;
+
+  FIEFrameWnd := FindWindow('IEFrame', nil);
+  if FIEFrameWnd = 0 then
+  begin
+    PostMessage(FIEFrameWnd, WM_CLOSE, 0, 0);
+    VariantInit(IEAppObj);
+  end;
+
+  LoadWebsiteItemsFromFile;
+  LoadFtpDataItemsFromFile;
+
+  FIsWebWorking := False;
+  FIsFtpWorking := False;
+  FIsServerEnabled := False;
+  FIsUploadScanWorking := False;
+
+  Timer2.Enabled1 := True;
+  TimInit.Enabled := True;
+  TimUploadScan.Enabled := True;
+end;
+
+procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+  sAppPath: string;
+begin
+  CanClose := False;
+  if MessageBox(Application.Handle, PChar(
+    '是否退出系统?'), PChar('警告'), 33) = mrOK then
+  begin
+    FormStorage1.SaveFormPlacement;
+
+    StrList.Free;
+    Str_List.Free;
+
+    FIEFrameWnd := FindWindow('IEFrame', nil);
+    if FIEFrameWnd <> 0 then
+    begin
+      PostMessage(FIEFrameWnd, WM_CLOSE, 0, 0);
+    end;
+
+    CanClose := True;
+  end;
+end;
+
+procedure TfrmMain.AddLog(szLog: string);
+begin
+  if mmStatus.Lines.Count > 12000 then
+    mmStatus.Clear;
+
+  mmStatus.Lines.Add(DateTimeToStr(now) + ' : ' + szLog + #13#10);
+end;
+
+procedure TfrmMain.FTPConnectServer(sHost, sPort, sUser, sPsw: string);
+begin
+  if IsFTPConnected then Exit;
+
+  CreateFtpConnectSrvEx(sHost, sUser, sPsw);
+
+  DeleteFile(szAppPath + '\result_m' + '.txx');
+  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_HIDE);
+end;
+
+procedure TfrmMain.FTPDisConnectServer;
+begin
+  if not IsFTPConnected then exit;
+
+  IsFTPConnected := False;
+end;
+
+procedure TfrmMain.FTPUploadFile(szFileName, sHost, sPort, sUser, sPsw: string);
+begin
+  if not IsFTPConnected then Exit;
+
+  CreateFtpSendFileToSrvEx(szFileName, sHost, sUser, sPsw);
+
+  DeleteFile(szAppPath + '\result_m' + '.txx');
+  if ckbCurlMode.Checked then
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_curl.bat'), nil, nil, SW_HIDE)
+  else
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_HIDE);
+//  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_SHOWNORMAL);
+end;
+
+procedure TfrmMain.Button2Click(Sender: TObject);
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器已断开！');
+    Exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+
+  KillFtpExeTask;
+  FTPDisConnectServer;
+  iLedRound1.Active := IsFTPConnected;
+
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+end;
+
+procedure TfrmMain.Button1Click(Sender: TObject);
+begin
+  if not OpenDialog1.Execute then exit;
+
+  Edit1.Text := OpenDialog1.FileName;
+end;
+
+procedure TfrmMain.Button3Click(Sender: TObject);
+var
+  nCurrTick, nStartTick: Cardinal;
+  nTotalSeconds: Integer;
+begin
+  if iLedRound1.Active then
+  begin
+    ShowMessage('服务器已连接！');
+    Exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+  Button8.Enabled := False;
+  Button9.Enabled := False;
+  Button11.Enabled := False;
+  Button15.Enabled := False;
+  Button12.Enabled := False;
+  Button10.Enabled := False;
+
+  iLedRound1.Active := False;
+
+  KillFtpExeTask;
+  Delay(2000);
+  FTPConnectServer(HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+  Button3.Caption := '0';
+  nTotalSeconds := 0;
+  IsFTPConnected := False;
+  try
+    nStartTick := GetTickCount;
+    while true do
+    begin
+      Application.ProcessMessages;
+
+      nCurrTick := GetTickCount;
+      if (nCurrTick - nStartTick) > 1000 then
+      begin
+        nStartTick := nCurrTick;
+        Inc(nTotalSeconds);
+        Button3.Caption := IntToStr(nTotalSeconds);
+
+        if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+        begin
+          AddLog(' FTP连接服务器超时(30秒)退出！');
+          ShowMessage(' FTP连接服务器超时(30秒)退出！');
+          break;
+        end;
+        Continue;
+      end;
+
+      if FileExists(szAppPath + '\result_m' + '.txx') then
+      begin
+        Delay(1000);
+        mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+        mmFtpTxt.Visible := CheckBox1.Checked;
+        if CheckBox1.Checked then
+        begin
+          ShowMessage(mmFtpTxt.Text);
+        end;
+
+        if Pos('User logged in', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP连接服务器成功！');
+          IsFTPConnected := True;
+        end else
+        begin
+          AddLog(' FTP连接服务器失败退出！');
+          ShowMessage(' FTP连接服务器失败退出！');
+        end;
+        Break;
+      end;
+    end;
+  except
+    IsFTPConnected := False;
+  end;
+
+  iLedRound1.Active := IsFTPConnected;
+
+  Button3.Caption := '连接服务器';
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+  Button8.Enabled := True;
+  Button9.Enabled := True;
+  Button11.Enabled := True;
+  Button15.Enabled := True;
+  Button12.Enabled := True;
+  Button10.Enabled := True;
+
+end;
+
+procedure TfrmMain.Button10Click(Sender: TObject);
+var
+  szFileName: string;
+  nCurrTick, nStartTick: Cardinal;
+  nTotalSeconds: Integer;
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  szFileName := Edit1.Text;
+  if not FileExists(szFileName) then
+  begin
+    ShowMessage('指定的上传文件 : ' + szFileName + ' 不存在错误！');
+    exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+  Button8.Enabled := False;
+  Button9.Enabled := False;
+  Button11.Enabled := False;
+  Button15.Enabled := False;
+  Button12.Enabled := False;
+  Button10.Enabled := False;
+
+  KillFtpExeTask;
+  Delay(2000);
+  FTPUploadFile(szFileName, HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+  Button10.Caption := '0';
+  nTotalSeconds := 0;
+  nStartTick := GetTickCount;
+  while true do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button10.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+      begin
+        AddLog(' FTP上传文件超时(30秒)退出！');
+        ShowMessage(' FTP上传文件超时(30秒)退出！');
+        break;
+      end;
+      Continue;
+    end;
+
+    if FileExists(szAppPath + '\result_m' + '.txx') then
+    begin
+      Delay(1000);
+      mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+      if ckbCurlMode.Checked then
+      begin
+        if Pos('We are completely uploaded and fine', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP上传文件成功！');
+          ShowMessage(' FTP上传文件成功！');
+        end else
+        begin
+          AddLog(' FTP上传文件失败退出！');
+          ShowMessage(' FTP上传文件失败退出！');
+        end;
+      end else
+      begin
+        if Pos('Transfer complete', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP上传文件成功！');
+          ShowMessage(' FTP上传文件成功！');
+        end else
+        begin
+          AddLog(' FTP上传文件失败退出！');
+          ShowMessage(' FTP上传文件失败退出！');
+        end;
+      end;
+      Break;
+    end;
+  end;
+
+  Button10.Caption := '手动上传';
+
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+  Button8.Enabled := True;
+  Button9.Enabled := True;
+  Button11.Enabled := True;
+  Button15.Enabled := True;
+  Button12.Enabled := True;
+  Button10.Enabled := True;
+end;
+
+
+procedure TfrmMain.Timer2Timer(Sender: TObject);
+var
+  nUsedTime: TDateTime;
+  nTotalSeconds: Integer;
+  nUsedTick: Cardinal;
+  nH, nM, nS, nHH: Word;
+begin
+  if FIsServerEnabled then
+  begin
+    nUsedTick := GetTickCount - FServerStartTime; // + 50 * 60 * 1000;
+    nTotalSeconds := nUsedTick div 1000;
+
+    nH := nTotalSeconds div 3600;
+    nM := (nTotalSeconds - nH * 3600) div 60;
+    nS := nTotalSeconds - nH * 3600 - nM * 60;
+
+    nHH := nH div 100;
+    nH := nH - nHH * 100;
+
+    iSevenSegmentClock1.Caption := Format('%0.2d:%0.2d:%0.2d', [nH, nM, nS]);
+//    iSevenSegmentClock1.Time := Time;
+  end;
+end;
+
+procedure TfrmMain.dxBarLargeButton17Click(Sender: TObject);
+begin
+  AddLog('扫描服务停止!');
+
+  FIsServerEnabled := False;
+
+  dxBarLargeButton2.Enabled := True;
+  dxBarLargeButton17.Enabled := False;
+
+  edFtpRunInteveral.Enabled := True;
+  edWebsiteRunInteveral.Enabled := True;
+
+  TimFtp.Enabled1 := False;
+  iSevenSegmentClock3.SetTimeInSeconds(0);
+  AddWebLog('Ftp服务器列表自动上传停止！');
+
+  Button19.Caption := '启动扫描';
+
+  TimWeb.Enabled1 := False;
+  iSevenSegmentClock2.SetTimeInSeconds(0);
+  AddWebLog('网站列表自动访问将停止！');
+
+  Button18.Caption := '启动扫描';
+end;
+
+procedure TfrmMain.TimWebTimer(Sender: TObject);
+var
+  nUsedTime: TDateTime;
+  nTotalSeconds: Integer;
+  nH, nM, nS, nHH: Word;
+
+  nItemIndex: Integer;
+  bWsConfigFound, bFileItemFound: Boolean;
+  nCount: Integer;
+  szFileName: string;
+
+  procedure WebUploadConfigScan();
+  var
+    I: Integer;
+  begin
+    fWebConfigFileItems.Directory := edConfigDataDir.Text;
+    fWebConfigFileItems.Update;
+
+    if fWebConfigFileItems.Items.Count = 0 then Exit;
+
+  //----查询 srvstart.dat文件，停止扫描循环---
+    bWsConfigFound := False;
+    nCount := fWebConfigFileItems.Items.Count;
+    for I := 0 to nCount - 1 do
+    begin
+      szFileName := fWebConfigFileItems.Items[I];
+      if (szFileName = 'wsItems.dat') then
+      begin
+        bWsConfigFound := True;
+        Break;
+      end;
+    end;
+
+    if not bWsConfigFound then Exit;
+
+    szFileName := edConfigDataDir.Text + '\wsItems.dat';
+    CopyFile(PChar(szFileName), PChar(szAppPath + '\WskData\wsItems.dat'), False);
+    AddWebLog('提取网站列表配置文件：' + szFileName);
+
+    DeleteFile(szFileName);
+    LoadWebsiteItemsFromFile;
+    AddWebLog('提取网站列表配置文件结束！');
+
+//    FIEFrameWnd := FindWindow('IEFrame', nil);
+//    if FIEFrameWnd = 0 then
+//    begin
+//      PostMessage(FIEFrameWnd, WM_CLOSE, 0, 0);
+//      VariantClear(IEAppObj);
+//      VariantInit(IEAppObj);
+//      Delay(20000);
+//    end;
+
+    AddWebLog('启动网站列表自动访问！');
+    StrSubUrlItems.Clear;
+    lstWebsiteItems.ItemIndex := -1;
+  end;
+begin
+  if FIsWebWorking then Exit;
+
+  if iSevenSegmentClock2.Time > 0 then
+  begin
+    nUsedTime := now - fWebStartTime; // + 50 * 60 * 1000;
+    DecodeTime(nUsedTime, nH, nM, nS, nHH);
+
+    nTotalSeconds := StrToInt(edWebsiteRunInteveral.Text) * 60; //iSevenSegmentClock3.Hours * 3600 + iSevenSegmentClock3.Minutes * 60 + iSevenSegmentClock3.Seconds;
+    nTotalSeconds := nTotalSeconds - (nH * 3600 + nM * 60 + nS);
+    if nTotalSeconds < 0 then
+      nTotalSeconds := 0;
+    iSevenSegmentClock2.SetTimeInSeconds(nTotalSeconds);
+
+    WebUploadConfigScan();
+    Exit;
+  end;
+
+  fWebStartTime := Now;
+  iSevenSegmentClock2.SetTimeInSeconds(StrToInt(edWebsiteRunInteveral.Text) * 60);
+
+  if lstWebsiteItems.Items.Count = 0 then
+  begin
+    AddWebLog('网站访问列表为空... ...');
+    Exit;
+  end;
+
+  nItemIndex := lstWebsiteItems.ItemIndex;
+  if StrSubUrlItems.Count = 0 then
+  begin
+    nItemIndex := nItemIndex + 1;
+    if nItemIndex >= lstWebsiteItems.Items.Count then
+      nItemIndex := 0;
+  end;
+
+  lstWebsiteItems.ItemIndex := nItemIndex;
+
+  FIsWebWorking := True;
+  try
+    AutoExecWebsiteItems;
+    FIsWebWorking := False;
+  except
+    AddWebLog('网站访问异常退出！');
+    FIsWebWorking := False;
+  end;
+end;
+
+procedure TfrmMain.dxBarLargeButton3Click(Sender: TObject);
+begin
+  if RzPageControl1.ActivePageIndex = 0 then
+  begin
+    mmStatus.Clear;
+    Exit;
+  end;
+
+  if RzPageControl1.ActivePageIndex = 1 then
+  begin
+    mmWebsiteInfo.Clear;
+    Exit;
+  end;
+end;
+
+procedure TfrmMain.Button8Click(Sender: TObject);
+var
+  szTxt: string;
+  bSrvFileFound: Boolean;
+  i, nTotalSeconds: Integer;
+  nCurrTick, nStartTick: Cardinal;
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+  Button8.Enabled := False;
+  Button9.Enabled := False;
+  Button11.Enabled := False;
+  Button15.Enabled := False;
+  Button12.Enabled := False;
+  Button10.Enabled := False;
+
+  KillFtpExeTask;
+  Delay(2000);
+  FTPServeFileList(HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+  Button8.Caption := '0';
+  nTotalSeconds := 0;
+  nStartTick := GetTickCount;
+  while true do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button8.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+      begin
+        AddLog(' FTP服务器文件列表超时(30秒)退出！');
+        ShowMessage(' FTP服务器文件列表超时(30秒)退出！');
+        break;
+      end;
+      Continue;
+    end;
+
+    if FileExists(szAppPath + '\result_m' + '.txx') then
+    begin
+      Delay(1000);
+      ListBox2.Clear;
+      mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+      if ckbCurlMode.Checked then
+      begin
+        if (Pos('226 Transfer com', mmFtpTxt.Text) > 0) and FileExists(szAppPath + '\fl.txt') then
+        begin
+          mmFtpTxt.Lines.LoadFromFile(szAppPath + '\fl.txt');
+          for I := 0 to mmFtpTxt.Lines.Count - 1 do
+          begin
+            szTxt := mmFtpTxt.Lines[I];
+            StrWords.CommaText := szTxt;
+            ListBox2.Items.Add(StrWords.Strings[8]);
+          end;
+        end else
+        begin
+          AddLog(' FTP服务器文件列表失败退出！');
+          ShowMessage(' FTP服务器文件列表失败退出！');
+        end;
+      end else
+      begin
+        if Pos('150 Opening ASCII mode data connection', mmFtpTxt.Text) > 0 then
+        begin
+          bSrvFileFound := False;
+          for I := 0 to mmFtpTxt.Lines.Count - 1 do
+          begin
+            szTxt := Trim(mmFtpTxt.Lines[I]);
+            if Pos('226 Transfer complete', szTxt) > 0 then
+              Break;
+
+            if Pos('150 Opening ASCII mode data connection', szTxt) > 0 then
+            begin
+              bSrvFileFound := True;
+              Continue;
+            end;
+
+            if bSrvFileFound then
+            begin
+              if szTxt <> '' then
+                ListBox2.Items.Add(szTxt);
+            end;
+          end;
+
+          AddLog('FTP服务器文件列表成功！');
+
+//        ShowMessage(' FTP上传文件成功！');
+        end else
+        begin
+          AddLog(' FTP服务器文件列表失败退出！');
+          ShowMessage(' FTP服务器文件列表失败退出！');
+        end;
+      end;
+      Break;
+    end;
+  end;
+
+  Button8.Caption := '服务器列表';
+
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+  Button8.Enabled := True;
+  Button9.Enabled := True;
+  Button11.Enabled := True;
+  Button15.Enabled := True;
+  Button12.Enabled := True;
+  Button10.Enabled := True;
+end;
+
+procedure TfrmMain.Button9Click(Sender: TObject);
+var
+  bDelSucc: boolean;
+  nCurrTick, nStartTick: Cardinal;
+  nTotalSeconds: Integer;
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  if ListBox2.Count = 0 then
+  begin
+    ShowMessage('服务器文件列表为空!');
+    exit;
+  end;
+
+  if ListBox2.ItemIndex = -1 then
+  begin
+    ShowMessage('请选择一个文件!');
+    exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+  Button8.Enabled := False;
+  Button9.Enabled := False;
+  Button11.Enabled := False;
+  Button15.Enabled := False;
+  Button12.Enabled := False;
+  Button10.Enabled := False;
+
+  KillFtpExeTask;
+  Delay(2000);
+  FTPServeDeleteFile(ListBox2.Items[ListBox2.ItemIndex], HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+  bDelSucc := False;
+  Button9.Caption := '0';
+  nTotalSeconds := 0;
+  nStartTick := GetTickCount;
+  while true do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button9.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+      begin
+        AddLog(' FTP服务器文件删除超时(30秒)退出！');
+        ShowMessage(' FTP服务器文件删除超时(30秒)退出！');
+        break;
+      end;
+      Continue;
+    end;
+
+    if FileExists(szAppPath + '\result_m' + '.txx') then
+    begin
+      Delay(1000);
+      ListBox2.Clear;
+      mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+      if ckbCurlMode.Checked then
+      begin
+        if Pos('250 DELE command', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP服务器文件删除成功！');
+          bDelSucc := True;
+//        ShowMessage(' FTP上传文件成功！');
+        end else
+        begin
+          AddLog(' FTP服务器文件删除失败退出！');
+          ShowMessage(' FTP服务器文件删除失败退出！');
+        end;
+      end else
+      begin
+        if Pos('250 DELE command successful', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP服务器文件删除成功！');
+          bDelSucc := True;
+//        ShowMessage(' FTP上传文件成功！');
+        end else
+        begin
+          AddLog(' FTP服务器文件删除失败退出！');
+          ShowMessage(' FTP服务器文件删除失败退出！');
+        end;
+      end;
+      Break;
+    end;
+  end;
+
+  Button9.Caption := '删除文件';
+
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+  Button8.Enabled := True;
+  Button9.Enabled := True;
+  Button11.Enabled := True;
+  Button15.Enabled := True;
+  Button12.Enabled := True;
+  Button10.Enabled := True;
+
+  if bDelSucc then
+    Button8Click(nil);
+end;
+
+procedure TfrmMain.Button11Click(Sender: TObject);
+var
+  bDelSucc: Boolean;
+  nCurrTick, nStartTick: Cardinal;
+  I, nFileCount, nTotalSeconds: Integer;
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  if ListBox2.Count = 0 then
+  begin
+    ShowMessage('服务器文件列表为空!');
+    exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+  Button8.Enabled := False;
+  Button9.Enabled := False;
+  Button11.Enabled := False;
+  Button15.Enabled := False;
+  Button12.Enabled := False;
+  Button10.Enabled := False;
+
+  KillFtpExeTask;
+  Delay(2000);
+  if ckbCurlMode.Checked then
+  begin
+    ListBox2.ItemIndex := 0;
+    nFileCount := ListBox2.Items.Count;
+
+    for I := 0 to nFileCount - 1 do
+    begin
+      Application.ProcessMessages;
+      ListBox2.ItemIndex := 0;
+      Button11.Caption := ListBox2.Items[0];
+
+      FTPServeDeleteFile(ListBox2.Items[0], HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+      bDelSucc := False;
+      Button9.Caption := '0';
+      nTotalSeconds := 0;
+      nStartTick := GetTickCount;
+      while true do
+      begin
+        Application.ProcessMessages;
+
+        nCurrTick := GetTickCount;
+        if (nCurrTick - nStartTick) > 1000 then
+        begin
+          nStartTick := nCurrTick;
+          Inc(nTotalSeconds);
+          Button9.Caption := IntToStr(nTotalSeconds);
+
+          if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+          begin
+            AddLog(' FTP服务器文件删除超时(30秒)退出！');
+            ShowMessage(' FTP服务器文件删除超时(30秒)退出！');
+            break;
+          end;
+          Continue;
+        end;
+
+        if FileExists(szAppPath + '\result_m' + '.txx') then
+        begin
+          Delay(1000);
+          mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+          if Pos('250 DELE command', mmFtpTxt.Text) > 0 then
+          begin
+            AddLog('FTP服务器文件删除成功！');
+            bDelSucc := True;
+            ListBox2.Items.Delete(0);
+//        ShowMessage(' FTP上传文件成功！');
+          end else
+          begin
+            AddLog(' FTP服务器文件删除失败退出！');
+            ShowMessage(' FTP服务器文件删除失败退出！');
+          end;
+
+          Break;
+        end;
+      end;
+
+      Delay(2000);
+      Button9.Caption := '删除文件';
+
+      if not bDelSucc then
+        Break;
+    end;
+
+    Button11.Caption := '全部删除';
+
+    Button3.Enabled := True;
+    Button2.Enabled := True;
+    Button8.Enabled := True;
+    Button9.Enabled := True;
+    Button11.Enabled := True;
+    Button15.Enabled := True;
+    Button12.Enabled := True;
+    Button10.Enabled := True;
+
+    Exit;
+  end;
+
+  FTPServeDeleteAllFiles(HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+  Button11.Caption := '0';
+  nTotalSeconds := 0;
+  nStartTick := GetTickCount;
+  while true do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button11.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+      begin
+        AddLog(' FTP服务器文件删除超时(30秒)退出！');
+        ShowMessage(' FTP服务器文件删除超时(30秒)退出！');
+        break;
+      end;
+      Continue;
+    end;
+
+    if FileExists(szAppPath + '\result_m' + '.txx') then
+    begin
+      ListBox2.Clear;
+      mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+      if Pos('250 DELE command successful', mmFtpTxt.Text) > 0 then
+      begin
+        AddLog('FTP服务器文件删除成功！');
+        ListBox2.Clear;
+//        ShowMessage(' FTP上传文件成功！');
+      end else
+      begin
+        AddLog(' FTP服务器文件删除失败退出！');
+        ShowMessage(' FTP服务器文件删除失败退出！');
+      end;
+      Break;
+    end;
+  end;
+
+  Button11.Caption := '全部删除';
+
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+  Button8.Enabled := True;
+  Button9.Enabled := True;
+  Button11.Enabled := True;
+  Button15.Enabled := True;
+  Button12.Enabled := True;
+  Button10.Enabled := True;
+end;
+
+procedure TfrmMain.ListBox2Click(Sender: TObject);
+begin
+  RemoteTxt.Text := '';
+  if ListBox2.ItemIndex < 0 then exit;
+
+  RemoteTxt.Text := ListBox2.Items[ListBox2.ItemIndex];
+  LocalTxt.Text := ExtractFileDir(Application.ExeName) + '\' + RemoteTxt.Text;
+end;
+
+procedure TfrmMain.Button12Click(Sender: TObject);
+var
+  nCurrTick, nStartTick: Cardinal;
+  nTotalSeconds: Integer;
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  Button3.Enabled := False;
+  Button2.Enabled := False;
+  Button8.Enabled := False;
+  Button9.Enabled := False;
+  Button11.Enabled := False;
+  Button15.Enabled := False;
+  Button12.Enabled := False;
+  Button10.Enabled := False;
+
+  KillFtpExeTask;
+  Delay(2000);
+  FTPDownloadFile(RemoteTxt.Text, LocalTxt.Text, HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+
+  Button12.Caption := '0';
+  nTotalSeconds := 0;
+  nStartTick := GetTickCount;
+  while true do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button12.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > MAX_FTPCONNECT_WAITING_TIME then
+      begin
+        AddLog(' FTP下载文件超时(30秒)退出！');
+        ShowMessage(' FTP下载文件超时(30秒)退出！');
+        break;
+      end;
+      Continue;
+    end;
+
+    if FileExists(szAppPath + '\result_m' + '.txx') then
+    begin
+      Delay(1000);
+
+      mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_m' + '.txx');
+
+      if ckbCurlMode.Checked then
+      begin
+        if Pos('226 Transfer com', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP下载文件成功！');
+          ShowMessage(' FTP下载文件成功！');
+        end else
+        begin
+          AddLog(' FTP下载文件失败退出！');
+          ShowMessage(' FTP下载文件失败退出！');
+        end;
+      end else
+      begin
+        if Pos('Transfer complete', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog('FTP下载文件成功！');
+          ShowMessage(' FTP下载文件成功！');
+        end else
+        begin
+          AddLog(' FTP下载文件失败退出！');
+          ShowMessage(' FTP下载文件失败退出！');
+        end;
+      end;
+      Break;
+    end;
+  end;
+
+  Button12.Caption := '手动下载';
+
+  Button3.Enabled := True;
+  Button2.Enabled := True;
+  Button8.Enabled := True;
+  Button9.Enabled := True;
+  Button11.Enabled := True;
+  Button15.Enabled := True;
+  Button12.Enabled := True;
+  Button10.Enabled := True;
+end;
+
+procedure TfrmMain.dxBarLargeButton12Click(Sender: TObject);
+begin
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  try
+//    IdFTP1.Abort;
+    szLog := 'FTP传输已放弃';
+    AddLog(szLog);
+    StatusBar1.Panels[2].Text := 'FTP传输已放弃!';
+    if TimWeb.Enabled1 then
+    begin
+      FTPDisConnectServer;
+      TimWeb.Enabled1 := False;
+    end;
+  except
+  end;
+end;
+
+procedure TfrmMain.Button14Click(Sender: TObject);
+var
+  szPath: string;
+  DesktopWnd, ChildWnd: HWND;
+  I, nTxtLength: Integer;
+  szWndTitle: string;
+  szWndTxt: array[0..1024] of char;
+begin
+//  szCmdTitle := LMDSysInfo1.WinSysPath + '\cmd.exe';
+//  MinimizedCMDWnd(LMDSysInfo1.WinSysPath + '\cmd.exe');
+
+{  DesktopWnd := GetDesktopWindow;
+  ChildWnd := GetWindow(DesktopWnd, GW_CHILD);
+  while True do
+  begin
+    ChildWnd := GetNextWindow(ChildWnd, GW_HWNDNEXT);
+    if ChildWnd = 0 then break;
+
+    nTxtLength := GetWindowText(ChildWnd, szWndTxt, 1024);
+    szWndTitle := '';
+    for I := 1 to nTxtLength do
+    begin
+      szWndTitle := szWndTitle + szWndTxt[I - 1];
+    end;
+
+    if szWndTitle = '命令提示符' then
+      ShowWindow(ChildWnd, SW_SHOWMINIMIZED);
+  end;
+
+  Memo4.Clear;
+  szPath := ExtractFileDir(Application.ExeName);
+  DeleteFile(szPath + '\result.txt');
+
+  if not IsFTPConnected then
+    FTPConnectServer(HostTxt.Text, PortTxt.Text, UserTxt.Text, PassTxt.Text);
+  if not IsFTPConnected then exit;
+
+  FTPDisConnectServer;
+
+  DosFtpSendTaskExec;
+
+  Timer2.Enabled := True;
+  Timer3.Enabled := True;
+  RzPageControl1.ActivePageIndex := 0;}
+end;
+
+procedure TfrmMain.CheckBox4Click(Sender: TObject);
+begin
+//  Memo4.Visible := CheckBox4.Checked;
+end;
+
+function TfrmMain.MinimizedCMDWnd(szTitle: string): Boolean;
+var
+  DesktopWnd, ChildWnd: HWND;
+  I, nTxtLength: Integer;
+  szWndTitle: string;
+  szWndTxt: array[0..1024] of char;
+begin
+  Result := False;
+  DesktopWnd := GetDesktopWindow;
+  ChildWnd := GetWindow(DesktopWnd, GW_CHILD);
+  while True do
+  begin
+    ChildWnd := GetNextWindow(ChildWnd, GW_HWNDNEXT);
+    if ChildWnd = 0 then break;
+
+    nTxtLength := GetWindowText(ChildWnd, szWndTxt, 1024);
+    szWndTitle := '';
+    for I := 1 to nTxtLength do
+    begin
+      szWndTitle := szWndTitle + szWndTxt[I - 1];
+    end;
+
+    if UpperCase(szWndTitle) = UpperCase(szTitle) then
+    begin
+      if not IsIconic(ChildWnd) then
+        ShowWindow(ChildWnd, SW_SHOWMINIMIZED);
+      CMDChildWnd := ChildWnd;
+      Result := True;
+      break;
+    end;
+  end;
+end;
+
+procedure TfrmMain.Button15Click(Sender: TObject);
+begin
+//
+  if not iLedRound1.Active then
+  begin
+    ShowMessage('服务器未连接!');
+    exit;
+  end;
+
+  try
+    StatusBar1.Panels[2].Text := '';
+ //   IdFTP1.ChangeDir(Edit6.Text);
+  except
+  end;
+end;
+
+
+procedure TfrmMain.Delay(ms: Integer);
+var
+  nStartTick: Cardinal;
+begin
+  nStartTick := GetTickCount;
+  while true do
+  begin
+    if (GetTickCount - nStartTick) > ms then break;
+
+    Application.ProcessMessages;
+  end;
+end;
+
+procedure TfrmMain.CreateFtpBatFileEx;
+var
+  szDrv, szDir, szPath: string;
+begin
+  szPath := szAppPath;
+  szDrv := Copy(szPath, 1, 2);
+  szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+  mmTest.Clear;
+  mmTest.Lines.Add(szDrv);
+  mmTest.Lines.Add('path = c:\windows\system32');
+  mmTest.Lines.Add('cd ' + szPath);
+  mmTest.Lines.Add('ftp -s:ftp_u' + '.txx>result_u' + '.tx');
+  mmTest.Lines.Add('rename result_u' + '.tx' + ' result_u' + '.txx');
+//  mmTest.Lines.Add('time');
+
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_u' + '.bat');
+
+  mmTest.Clear;
+  mmTest.Lines.Add(szDrv);
+  mmTest.Lines.Add('path = c:\windows\system32');
+  mmTest.Lines.Add('cd ' + szPath);
+  mmTest.Lines.Add('ftp -s:ftp_m' + '.txx>result_m' + '.tx');
+  mmTest.Lines.Add('rename result_m' + '.tx' + ' result_m' + '.txx');
+//  mmTest.Lines.Add('time');
+
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.bat');
+end;
+
+
+procedure TfrmMain.CreateFtpTxtFileEx(szFileName, szIPAddr, szSrvUserName, szsrvPSW: string);
+var
+  szSendFile: string;
+  szDrv, szDir, szPath: string;
+begin
+  szSendFile := szAppPath + '\FtpData\' + szFileName;
+  if ckbCurlMode.Checked then
+  begin
+    szPath := szAppPath;
+    szDrv := Copy(szPath, 1, 2);
+    szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+    mmTest.Clear;
+    mmTest.Lines.Add(szDrv);
+    mmTest.Lines.Add('path = c:\windows\system32');
+    mmTest.Lines.Add('cd ' + szPath);
+    mmTest.Lines.Add('curl --trace result_u.tx -u ' + szSrvUserName + ':' + szsrvPSW + ' -T ' + szSendFile + ' ftp://' + szIPAddr);
+    mmTest.Lines.Add('rename result_u.tx' + ' result_u.txx');
+//  mmTest.Lines.Add('time');
+
+    mmTest.Lines.SaveToFile(szAppPath + '\ftp_u' + '.bat');
+
+    Exit;
+  end;
+
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('send ' + szSendFile + ' ' + szFileName);
+//  mmTest.Lines.Add('rename ' + szSendFile + '_ ' + szSendFile);
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_u' + '.txx');
+end;
+
+procedure TfrmMain.IdIcmpClient1Reply(ASender: TComponent; const AReplyStatus:
+  TReplyStatus);
+var
+  szTxt: string;
+  tvNode: TTreeNode;
+begin
+  if AReplyStatus.ReplyStatusType = rsEcho then
+  begin
+    FIsServerExists := True;
+    iLedRound2.Active := True;
+    AddLog('Ping服务器( ' + HostTxt.Text + ' )成功！');
+    Exit;
+  end;
+
+  FIsServerExists := False;
+  iLedRound2.Active := False;
+  AddLog('Ping服务器( ' + HostTxt.Text + ' )失败！');
+end;
+
+procedure TfrmMain.PingFtpServer(szIPAddr: string);
+begin
+  try
+    FIsServerExists := False;
+    HostTxt.Text := szIPAddr;
+//    IdIcmpClient1.Host := szIPAddr;
+//    IdIcmpClient1.Ping();
+    Delay(1000);
+  except
+    FIsServerExists := False;
+    iLedRound2.Active := False;
+  end;
+end;
+
+procedure TfrmMain.dxBarLargeButton1Click(Sender: TObject);
+begin
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TfrmMain.BringVideoWndToTop(szWndName: string);
+var
+  hwnd: THandle;
+begin
+  hwnd := FindWindow(nil, PChar(szWndName));
+  if hwnd <> 0 then
+  begin
+    BringWindowToTop(hwnd);
+    ShowWindow(Handle, SW_SHOWMINIMIZED);
+    exit;
+  end;
+end;
+
+procedure TfrmMain.Button18Click(Sender: TObject);
+begin
+  if Button18.Caption = '启动扫描' then
+  begin
+    if lstWebsiteItems.Items.Count = 0 then
+    begin
+      AddWebLog('网站扫描列表为空！');
+      Exit;
+    end;
+
+    StartExecWebsiteItems;
+
+    iSevenSegmentClock2.SetTimeInSeconds(StrToInt(edWebsiteRunInteveral.Text) * 60);
+    AutoExecWebsiteItems;
+    Button18.Caption := '停止扫描';
+  end else
+  begin
+    TimWeb.Enabled1 := False;
+    iSevenSegmentClock2.SetTimeInSeconds(0);
+    AddWebLog('网站列表自动访问将停止！');
+
+    Button18.Caption := '启动扫描';
+  end;
+end;
+
+procedure TfrmMain.Button19Click(Sender: TObject);
+begin
+  if Button19.Caption = '启动扫描' then
+  begin
+    StartExecFtpItems;
+
+    iSevenSegmentClock3.SetTimeInSeconds(StrToInt(edFtpRunInteveral.Text) * 60);
+
+    if lstFtpUploadItems.ItemIndex < 0 then
+      lstFtpUploadItems.ItemIndex := 0;
+
+    AutoExecFtpItems;
+    Button19.Caption := '停止扫描';
+  end else
+  begin
+    TimFtp.Enabled1 := False;
+    iSevenSegmentClock3.SetTimeInSeconds(0);
+    AddWebLog('Ftp服务器列表自动上传停止！');
+
+    Button19.Caption := '启动扫描';
+  end;
+end;
+
+procedure TfrmMain.TimFtpTimer(Sender: TObject);
+var
+  nUsedTime: TDateTime;
+  nTotalSeconds: Integer;
+  nH, nM, nS, nHH: Word;
+
+  nItemIndex: Integer;
+  bFtpConfigFound, bFileItemFound: Boolean;
+  nCount: Integer;
+  szFileName, szDestFileName: string;
+
+  procedure CopyFtpUploadConfigFiles;
+  var
+    I: Integer;
+  begin
+    fFtpConfigFileItems.Directory := edConfigDataDir.Text;
+    fFtpConfigFileItems.Update;
+
+    if fFtpConfigFileItems.Items.Count = 0 then
+      Exit;
+
+    StrList.Clear;
+    for I := 0 to fFtpConfigFileItems.Items.Count - 1 do
+    begin
+      szFileName := fFtpConfigFileItems.Items[I];
+      if (szFileName = 'ftpItems.dat') then
+        Continue;
+      if (szFileName = 'wsItems.dat') then
+        Continue;
+
+      StrList.Add(szFileName);
+    end;
+
+    for I := 0 to StrList.Count - 1 do
+    begin
+      szFileName := fFtpConfigFileItems.Directory + '\' + StrList.Strings[I];
+      szDestFileName := szAppPath + '\FtpData\' + StrList.Strings[I];
+
+      CopyFile(PChar(szFileName), PChar(szDestFileName), False);
+      DeleteFile(szFileName);
+    end;
+  end;
+
+  procedure FtpUploadConfigScan();
+  var
+    I: Integer;
+  begin
+    if (edConfigDataDir.Text = '') or (not DirectoryExists(edConfigDataDir.Text)) then
+      Exit;
+
+    fFtpConfigFileItems.Directory := edConfigDataDir.Text;
+    fFtpConfigFileItems.Update;
+
+    if fFtpConfigFileItems.Items.Count = 0 then
+      Exit;
+
+  //----查询 srvstart.dat文件，停止扫描循环---
+    bFtpConfigFound := False;
+    nCount := fFtpConfigFileItems.Items.Count;
+    for I := 0 to nCount - 1 do
+    begin
+      szFileName := fFtpConfigFileItems.Items[I];
+
+      if (szFileName = 'ftpsrvItems.dat') then
+      begin
+        bFtpConfigFound := True;
+        Break;
+      end;
+    end;
+
+    if not bFtpConfigFound then
+      Exit;
+
+    AddLog('开始清除FtpData数据文件... ...');
+    ClearRmtFtpDataDir;
+    AddLog('清除FtpData数据文件结束！');
+
+    szFileName := edConfigDataDir.Text + '\ftpsrvItems.dat';
+    CopyFile(PChar(szFileName), PChar(szAppPath + '\FtpData\ftpsrvItems.dat'), False);
+    AddLog('提取Ftp数据配置文件：' + szFileName);
+
+    DeleteFile(szFileName);
+    CopyFtpUploadConfigFiles;
+
+    LoadFtpDataItemsFromFile;
+    if lstFtpUploadItems.ItemIndex < 0 then
+      lstFtpUploadItems.ItemIndex := 0;
+
+    AddLog('提取Ftp数据配置文件结束！');
+
+    AddLog('启动Ftp服务器列表自动上传！');
+  end;
+begin
+  if FIsFtpWorking then Exit;
+
+  if iSevenSegmentClock3.Time > 0 then
+  begin
+    nUsedTime := now - fFtpStartTime; // + 50 * 60 * 1000;
+    DecodeTime(nUsedTime, nH, nM, nS, nHH);
+
+    nTotalSeconds := StrToInt(edFtpRunInteveral.Text) * 60; //iSevenSegmentClock3.Hours * 3600 + iSevenSegmentClock3.Minutes * 60 + iSevenSegmentClock3.Seconds;
+    nTotalSeconds := nTotalSeconds - (nH * 3600 + nM * 60 + nS);
+    if nTotalSeconds < 0 then
+      nTotalSeconds := 0;
+    iSevenSegmentClock3.SetTimeInSeconds(nTotalSeconds);
+
+    FtpUploadConfigScan();
+    Exit;
+  end;
+
+  fFtpStartTime := Now;
+  iSevenSegmentClock3.SetTimeInSeconds(StrToInt(edFtpRunInteveral.Text) * 60);
+
+  if lstFtpUploadItems.Items.Count = 0 then
+  begin
+    AddLog('Ftp服务器上传文件列表为空... ...');
+    Exit;
+  end;
+
+  nItemIndex := lstFtpUploadItems.ItemIndex;
+  nItemIndex := nItemIndex + 1;
+  if nItemIndex >= lstFtpUploadItems.Items.Count then
+    nItemIndex := 0;
+
+  lstFtpUploadItems.ItemIndex := nItemIndex;
+
+  FIsFtpWorking := True;
+  AutoExecFtpItems;
+  FIsFtpWorking := False;
+end;
+
+procedure TfrmMain.AddWebLog(szLog: string);
+begin
+  if mmWebsiteInfo.Lines.Count > 12000 then
+    mmWebsiteInfo.Clear;
+
+  mmWebsiteInfo.Lines.Add(DateTimeToStr(now) + ' : ' + szLog + #13#10);
+end;
+
+procedure TfrmMain.LoadWebsiteItemsFromFile;
+var
+  k: Integer;
+  szFileName, szUrl, szSubUrlFileName: string;
+begin
+  lstWebsiteItems.Clear;
+
+  szFileName := szAppPath + '\WskData\wsItems.dat';
+  if not FileExists(szFileName) then
+  begin
+    AddWebLog('网站访问任务列表文件: ' + szFileName + ' 不存在！');
+    Exit;
+  end;
+
+  lstWebsiteItems.Clear;
+  lstUrlUploadItems.Clear;
+  lstSubUrlItems.Clear;
+
+  StrList.LoadFromFile(szFileName);
+  if StrList.Count = 0 then Exit;
+
+  for k := 0 to StrList.Count - 1 do
+  begin
+    szUrl := StrList.Strings[k];
+    lstWebsiteItems.Items.Add(szUrl);
+    lstUrlUploadItems.Items.Add(szUrl);
+    AddWebLog('添加网站访问列表: ' + szUrl);
+  end;
+
+  szUrl := StrList.Strings[0];
+  szSubUrlFileName := StringReplace(szUrl, '.', '_', [rfReplaceAll]);
+  if FileExists(szAppPath + '\WskData\' + szSubUrlFileName + '.txt') then
+  begin
+    StrList.LoadFromFile(szAppPath + '\WskData\' + szSubUrlFileName + '.txt');
+    for k := 0 to StrList.Count - 1 do
+    begin
+      szUrl := StrList.Strings[k];
+      lstSubUrlItems.Items.Add(szUrl);
+      AddWebLog('添加子网站访问列表: ' + szUrl);
+    end;
+  end;
+
+  lstWebsiteItems.ItemIndex := 0;
+end;
+
+procedure TfrmMain.StartExecWebsiteItems;
+begin
+  if not ckbDownCurlMode.Checked then
+  begin
+    if CheckVarIsEmpty(IEAppObj) then
+    begin
+      AddWebLog('开始创建浏览器对象... ...');
+      IEAppObj := CreateIEAutoObject;
+
+      FIEFrameWnd := FindWindow('IEFrame', nil);
+//    if FIEFrameWnd = 0 then
+//    begin
+//      ShowMessage('IE对象创建失败！');
+//    end;
+    end;
+  end;
+
+  if dxBarLargeButton2.Enabled then
+    Exit;
+
+  AddWebLog('开始启动网站列表自动访问... ...');
+  TimWeb.Enabled1 := False;
+  iSevenSegmentClock2.SetTimeInSeconds(StrToInt(edWebsiteRunInteveral.Text) * 60);
+  TimWeb.Enabled1 := True;
+end;
+
+procedure TfrmMain.AutoExecWebsiteItems;
+var
+  szUrl, szSubUrl, szUrlHead, szUrlHead1, szTemp: string;
+
+  nStartTick, nCurrTick: Cardinal;
+  I, nCount, nItemIndex, nTotalSeconds: Integer;
+  eLinks, eLink: OleVariant;
+
+  procedure WaitCurlExecCompleted;
+  begin
+    szTemp := Button18.Caption;
+
+    nTotalSeconds := 0;
+    Button18.Caption := IntToStr(nTotalSeconds);
+
+    nStartTick := GetTickCount;
+    while True do
+    begin
+      Application.ProcessMessages;
+
+      nCurrTick := GetTickCount;
+      if (nCurrTick - nStartTick) > 1000 then
+      begin
+        nStartTick := nCurrTick;
+        Inc(nTotalSeconds);
+        Button18.Caption := IntToStr(nTotalSeconds);
+
+        if nTotalSeconds > 1800 then
+        begin
+          AddWebLog(' Curl访问网站: ' + szUrl + ' 超时(1800秒)退出！');
+          Break;
+        end else
+        begin
+          Continue;
+        end;
+      end;
+
+      if FileExists(szAppPath + '\cr.html') then
+      begin
+        Delay(1000);
+
+        mmWPSrc.Lines.LoadFromFile(szAppPath + '\cr.html');
+        AddWebLog(' Curl访问网站: ' + szUrl + ' 成功！');
+        Break;
+      end;
+    end;
+
+    Button18.Caption := szTemp;
+  end;
+begin
+  if lstWebsiteItems.Count = 0 then Exit;
+
+  if not ckbDownCurlMode.Checked then
+  begin
+    FIEFrameWnd := FindWindow('IEFrame', nil);
+    if FIEFrameWnd = 0 then
+      IEAppObj := CreateIEAutoObject;
+
+//  szUrl := 'c:\1.html';
+//  NavigateToTargetUrl(IEAppObj, szUrl);
+//  Exit;
+  end;
+
+  if StrSubUrlItems.Count = 0 then
+  begin
+    if lstWebsiteItems.ItemIndex < 0 then
+      lstWebsiteItems.ItemIndex := 0;
+
+    szUrl := lstWebsiteItems.Items[lstWebsiteItems.ItemIndex];
+    szSubUrl := StringReplace(szUrl, '.', '_', [rfReplaceAll]);
+
+    if FileExists(szAppPath + '\WskData\' + szSubUrl + '.txt') then
+    begin
+      StrSubUrlItems.LoadFromFile(szAppPath + '\WskData\' + szSubUrl + '.txt');
+    end;
+
+    if Pos('WWW', UpperCase(szUrl)) = 1 then
+      szUrl := 'https://' + szUrl;
+
+    lbWB.Caption := szUrl;
+    AddWebLog('开始自动访问网站列表：' + IntToStr(lstWebsiteItems.ItemIndex + 1) + '---' + szUrl);
+    if not ckbDownCurlMode.Checked then
+    begin
+      NavigateToTargetUrl(IEAppObj, szUrl);
+       if Pos('https',szUrl)>0 then
+          lbll.text :=VisitHttps(szUrl)
+        else
+          lbll.text :=GetUrlFileSize(szUrl);
+
+    end else
+    begin
+      if Pos('&', szUrl) > 0 then
+        szUrl := StringReplace(szUrl, '&', '"&"', [rfReplaceAll]);
+
+      CreateCurlBatFileEx(szUrl);
+      Delay(1000);
+
+      DeleteFile(szAppPath + '\cr.html');
+//      ShellExecute(Application.handle, nil, PChar(szAppPath + '\curl_w.bat'), nil, nil, SW_SHOWNORMAL);
+      ShellExecute(Application.handle, nil, PChar(szAppPath + '\curl_w.bat'), nil, nil, SW_HIDE);
+
+      WaitCurlExecCompleted;
+    end;
+
+    AddWebLog('访问访问网站列表结束！');
+    Exit;
+  end;
+
+  if lstWebsiteItems.ItemIndex < 0 then
+  begin
+    lstWebsiteItems.ItemIndex := 0;
+    szUrl := lstWebsiteItems.Items[0];
+  end else
+  begin
+    szUrl := lstWebsiteItems.Items[lstWebsiteItems.ItemIndex];
+  end;
+
+  szSubUrl := StrSubUrlItems.Strings[0];
+  szUrlHead := UpperCase(Copy(szSubUrl, 1, 5));
+  szUrlHead1 := UpperCase(Copy(szSubUrl, 1, 6));
+
+  if szUrlHead = 'HTTP:' then
+    szUrl := StrSubUrlItems.Strings[0]
+  else if szUrlHead1 = 'HTTPS:' then
+    szUrl := StrSubUrlItems.Strings[0]
+  else
+  begin
+    if Pos('WWW', UpperCase(szUrl)) = 1 then
+      szUrl := 'https://' + szUrl;
+    szUrl := szUrl + '/' + StrSubUrlItems.Strings[0];
+  end;
+
+  StrSubUrlItems.Delete(0);
+
+  lbWB.Caption := szUrl;
+  AddWebLog('开始自动访问子网站列表( ' + IntToStr(StrSubUrlItems.Count) + ' ) ：' + szUrl);
+  if not ckbDownCurlMode.Checked then
+  begin
+    NavigateToTargetUrl(IEAppObj, szUrl);
+  end else
+  begin
+    if Pos('&', szUrl) > 0 then
+      szUrl := StringReplace(szUrl, '&', '"&"', [rfReplaceAll]);
+
+    CreateCurlBatFileEx(szUrl);
+    Delay(1000);
+
+    DeleteFile(szAppPath + '\cr.html');
+//      ShellExecute(Application.handle, nil, PChar(szAppPath + '\curl_w.bat'), nil, nil, SW_SHOWNORMAL);
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\curl_w.bat'), nil, nil, SW_HIDE);
+
+    WaitCurlExecCompleted;
+  end;
+  AddWebLog('访问访问子网站列表结束！');
+end;
+
+procedure TfrmMain.Button21Click(Sender: TObject);
+begin
+  if TimFtp.Enabled1 then
+  begin
+    ShowMessage('Ftp服务器传输正在运行中，请停止后再更新列表！');
+    Exit;
+  end;
+
+  if lstFtpServerUploadItems.Items.Count = 0 then
+  begin
+    ShowMessage('服务器列表为空！');
+    Exit;
+  end;
+
+  lstFtpServerUploadItems.Items.Delete(lstFtpServerUploadItems.ItemIndex);
+  FormStorage1.SaveFormPlacement;
+end;
+
+procedure TfrmMain.Button22Click(Sender: TObject);
+var
+  I, J: Integer;
+  szFtpItem: string;
+begin
+  if TimFtp.Enabled1 then
+  begin
+    AddLog('Ftp服务器传输正在运行中，请停止后再更新列表！');
+    if Sender <> nil then
+      ShowMessage('Ftp服务器传输正在运行中，请停止后再更新列表！');
+    Exit;
+  end;
+
+  if lstFtpServerItems.Items.Count = 0 then
+  begin
+    AddLog('服务器列表为空！');
+    if Sender <> nil then
+      ShowMessage('服务器列表为空！');
+    Exit;
+  end;
+
+  if fFtpFileItems.Items.Count = 0 then
+  begin
+    AddLog('Ftp上传文件列表为空！');
+    if Sender <> nil then
+      ShowMessage('Ftp上传文件列表为空！');
+    Exit;
+  end;
+
+  lstFtpUploadItems.Clear;
+  for I := 0 to lstFtpServerItems.Items.Count - 1 do
+  begin
+    for J := 0 to fFtpFileItems.Items.Count - 1 do
+    begin
+      szFtpItem := lstFtpServerItems.Items[I] + '|' +
+        fFtpFileItems.Items[J];
+
+      lstFtpUploadItems.Items.Add(szFtpItem);
+    end;
+  end;
+
+  lstFtpUploadItems.ItemIndex := 0;
+end;
+
+procedure TfrmMain.Button20Click(Sender: TObject);
+var
+  szFtpSrvItem: string;
+begin
+  if TimFtp.Enabled1 then
+  begin
+    ShowMessage('Ftp服务器传输正在运行中，请停止后再更新列表！');
+    Exit;
+  end;
+
+  frmFtpAccountDlg.ShowModal;
+  if frmFtpAccountDlg.ModalResult <> mrOk then
+    Exit;
+
+  szFtpSrvItem := Trim(frmFtpAccountDlg.edFtpServer.Text) + '|' +
+    Trim(frmFtpAccountDlg.edUserName.Text) + '|' +
+    Trim(frmFtpAccountDlg.edFtpPSW.Text) + '|' +
+    Trim(frmFtpAccountDlg.edFtpWorkAccount.Text) + '|' +
+    Trim(frmFtpAccountDlg.edFtpWorkPSW.Text);
+  lstFtpServerUploadItems.Items.Add(szFtpSrvItem);
+
+  FormStorage1.SaveFormPlacement;
+end;
+
+procedure TfrmMain.AutoExecFtpItems;
+var
+  szFtpItem, szFtpServerIp, szFtpUserName, szFtpPSW, szFileName: string;
+begin
+  if lstFtpUploadItems.Count = 0 then Exit;
+
+  if lstFtpUploadItems.ItemIndex < 0 then
+    lstFtpUploadItems.ItemIndex := 0;
+
+  szFtpItem := lstFtpUploadItems.Items[lstFtpUploadItems.ItemIndex];
+  szFtpItem := StringReplace(szFtpItem, '|', ',', [rfReplaceAll]);
+
+  StrWords.CommaText := szFtpItem;
+
+  szFtpServerIp := StrWords.Strings[0];
+  szFtpUserName := StrWords.Strings[1];
+  szFtpPSW := StrWords.Strings[2];
+  szFileName := StrWords.Strings[3];
+
+  if not FileExists(szAppPath + '\FtpData\' + szFileName) then
+  begin
+    AddLog('待上传的目标文件未发现错误：' + szFileName);
+    Exit;
+  end;
+
+  if ckbPing.Checked then
+  begin
+    PingFtpServer(szFtpServerIp);
+    if not FIsServerExists then
+    begin
+      AddLog('目标Ftp服务器不存在错误：' + szFtpServerIp);
+      Exit;
+    end;
+  end;
+
+  lbFtp.Caption := szFtpServerIp + ' | ' + szFileName;
+  AddLog('开始上传的目标文件到Ftp服务器：' + szFtpServerIp + ' | ' + szFileName);
+  iLedRound2.Active := True;
+  AutoUploadFileToServer(szFileName, szFtpServerIp, szFtpUserName, szFtpPSW);
+  iLedRound2.Active := False;
+  AddLog('上传的目标文件到Ftp服务器结束！');
+end;
+
+procedure TfrmMain.StartExecFtpItems;
+begin
+  AddLog('开始启动Ftp服务器自动上传... ...');
+
+  TimFtp.Enabled1 := False;
+  iSevenSegmentClock3.SetTimeInSeconds(StrToInt(edFtpRunInteveral.Text) * 60);
+  TimFtp.Enabled1 := True;
+end;
+
+function TfrmMain.AutoUploadFileToServer(szFileName, szSrvIp,
+  szSrvUserName, szsrvPSW: string): Integer;
+var
+  nTotalSeconds: Integer;
+  nStartTick, nCurrTick: Cardinal;
+  szTemp: string;
+begin
+  Result := 1;
+  szTemp := Button19.Caption;
+
+  KillFtpExeTask;
+
+  AddLog(' 开始FTP上传: ' + szFileName + '... ...');
+  DeleteFile(szAppPath + '\result_u' + '.txx');
+
+  CreateFtpTxtFileEx(szFileName, szSrvIp, szSrvUserName, szsrvPSW);
+
+  Delay(2000);
+
+  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_u.bat'), nil, nil, SW_HIDE);
+
+  nTotalSeconds := 0;
+  Button19.Caption := IntToStr(nTotalSeconds);
+
+  nStartTick := GetTickCount;
+  while True do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button19.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > 1800 then
+      begin
+        AddLog(' FTP上传文件: ' + szFileName + ' 超时(1800秒)退出！');
+        Result := 0;
+
+        Break;
+      end else
+      begin
+        Continue;
+      end;
+    end;
+
+    if ckbCurlMode.Checked then
+    begin
+      if FileExists(szAppPath + '\result_u' + '.txx') then
+      begin
+        Delay(1000);
+        mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_u' + '.txx');
+        if Pos('Connection refused', mmFtpTxt.Text) > 0 then
+        begin
+          AddLog(' FTP上传文件: ' + szFileName + ' 失败！');
+          AddLog(mmFtpTxt.Text)
+        end else
+          AddLog(' FTP上传文件: ' + szFileName + ' 成功！');
+        Break;
+      end;
+    end else
+    begin
+      if FileExists(szAppPath + '\result_u' + '.txx') then
+      begin
+        Delay(1000);
+        mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_u' + '.txx');
+
+        if Pos('Transfer complete', mmFtpTxt.Text) > 0 then
+          AddLog(' FTP上传文件: ' + szFileName + ' 成功！')
+        else
+          AddLog(' FTP上传文件: ' + szFileName + ' 失败！');
+
+        Break;
+      end;
+    end;
+  end;
+
+  Button19.Caption := szTemp;
+end;
+
+procedure TfrmMain.SpeedButton6Click(Sender: TObject);
+begin
+  if not DirectoryExists(AdvDirectoryEdit1.Text) then
+    Exit;
+
+  fFtpFileItems.Directory := AdvDirectoryEdit1.Text;
+  fFtpFileItems.Update;
+end;
+
+ //【添加】执行的代码说明如下
+procedure TfrmMain.Button4Click(Sender: TObject);
+var
+  I: Integer;
+  szDir, szUrl, szSubUrlFileName: string;
+begin
+  szUrl := Trim(edUrl.Text);
+
+  //判断URL是否填写
+  if szUrl = '' then
+  begin
+    ShowMessage('Url地址为空！');
+    Exit;
+  end;
+
+  //遍历循环判断ListBox里面是否添加过 这个网址
+  for I := 0 to lstUrlUploadItems.Items.Count - 1 do
+  begin
+    if UpperCase(lstUrlUploadItems.Items[I]) = UpperCase(szUrl) then
+    begin
+      ShowMessage('Url地址已添加！');
+      Exit;
+    end;
+  end;
+
+   //按钮控制
+  edUrl.Enabled := False;
+  Button4.Enabled := False;
+  Button5.Enabled := False;
+
+  //获取程序所在目录下的    WskData 文件夹
+  szDir := szAppPath + '\WskData\';
+
+  //初始化清空StringLIst
+  lstSubUrlItems.Clear;
+
+  //ListBox里面添加这个网址
+  lstUrlUploadItems.Items.Add(szUrl);
+
+  //字符串列表初始化
+  StrList.Clear;
+
+  //添加 ListBox里面的网址到 StrList 字符串列表
+  for I := 0 to lstUrlUploadItems.Count - 1 do
+  begin
+    StrList.Add(lstUrlUploadItems.Items[I]);
+  end;
+
+  //保存为 目录下的wsItems.dat 文件
+  StrList.SaveToFile(szDir + 'wsItems.dat');
+
+  //标签赋值
+  lbUrlTemp.Caption := '访问目标网站：' + szUrl;
+
+  //添加主页里的其它子网页  到 StrSubUrlItems 列表
+  ExtractWebsiteSubItems(szUrl);
+
+  if StrSubUrlItems.Count > 0 then
+  begin
+    for I := 0 to StrSubUrlItems.Count - 1 do
+    begin
+    //界面listbox添加 子网址
+      lstSubUrlItems.Items.Add(StrSubUrlItems.Strings[I]);
+      //这段是为了防止界面卡顿
+      Application.ProcessMessages;
+    end;
+
+    //替换网站的.为下划线—
+    szSubUrlFileName := StringReplace(szUrl, '.', '_', [rfReplaceAll]);
+     //存放到程序目录下以 网址.text文件 存放
+    StrSubUrlItems.SaveToFile(szDir + '\' + szSubUrlFileName + '.txt');
+
+//    StrSubUrlItems.SaveToFile(szAppPath + '\FtpConfigData\' + szSubUrlFileName + '.txt');
+  end;
+
+  //恢复按钮 清空地址框
+  edUrl.Enabled := True;
+  Button4.Enabled := True;
+  Button5.Enabled := True;
+
+  edUrl.Text := '';
+  FormStorage1.SaveFormPlacement;
+end;
+
+procedure TfrmMain.Button5Click(Sender: TObject);
+var
+  I: Integer;
+  szDir, szUrl, szSubUrl: string;
+begin
+  if lstUrlUploadItems.Items.Count = 0 then
+  begin
+    ShowMessage('Url地址列表为空！');
+    Exit;
+  end;
+
+  if lstUrlUploadItems.ItemIndex < 0 then
+  begin
+    ShowMessage('请选择一个Url地址！');
+    Exit;
+  end;
+
+  szDir := szAppPath + '\' + 'WskData';
+
+  szUrl := lstUrlUploadItems.Items[I];
+  szSubUrl := StringReplace(szUrl, '.', '_', [rfReplaceAll]);
+  if FileExists(szDir + '\' + szSubUrl + '.txt') then
+    DeleteFile(szDir + '\' + szSubUrl + '.txt');
+//  DeleteFile(szAppPath + '\FtpConfigData\' + szSubUrl + '.txt');
+
+  lstSubUrlItems.Clear;
+  lstUrlUploadItems.Items.Delete(lstUrlUploadItems.ItemIndex);
+
+  StrList.Clear;
+  for I := 0 to lstUrlUploadItems.Count - 1 do
+  begin
+    StrList.Add(lstUrlUploadItems.Items[I]);
+  end;
+  StrList.SaveToFile(szDir + '\wsItems.dat');
+
+  FormStorage1.SaveFormPlacement;
+
+  if lstUrlUploadItems.Count = 0 then
+    Exit;
+
+  lstUrlUploadItems.ItemIndex := 0;
+  if i>=lstUrlUploadItems.count then exit;
+  szUrl := lstUrlUploadItems.Items[I];
+  szSubUrl := StringReplace(szUrl, '.', '_', [rfReplaceAll]);
+  if FileExists(szDir + '\' + szSubUrl + '.txt') then
+    StrList.LoadFromFile(szDir + '\' + szSubUrl + '.txt');
+
+  for I := 0 to StrList.Count - 1 do
+  begin
+    lstSubUrlItems.Items.Add(StrList.Strings[I]);
+  end;
+end;
+
+function TfrmMain.UploadConfigDataToFtpServer(szServerIP, szUser, szPSW: string): Integer;
+var
+  I, nOk: Integer;
+  szFileName, szIP, szSubIP: string;
+begin
+  Result := 0;
+
+  if szServerIP = '127.0.0.1' then
+  begin
+    //---清空当前FtpData目录
+    ClearFtpDataDir;
+
+    //---拷贝FtpData文件
+    CopyFilesToFtpDataDir;
+
+    //---拷贝FtpSrvItems文件
+    SaveFtpServerItemsToFile;
+
+    //--拷贝WebSiteItems文件
+    SaveWebSiteItemsToFile;
+
+    //--加载到WebSiteItems访问列表
+    LoadWebsiteItemsFromFile;
+
+    //--加载到FtpData访问列表
+    LoadFtpDataItemsFromFile;
+
+    Result := 1;
+
+    Exit;
+  end;
+
+  if ckbPing.Checked then
+  begin
+    PingFtpServer(szServerIP);
+    if not FIsServerExists then
+    begin
+      AddLog('目标Ftp服务器不存在错误：' + szServerIP);
+      ShowMessage('目标Ftp服务器不存在错误：' + szServerIP);
+      Exit;
+    end;
+  end;
+
+  szFileName := 'wsItems.dat';
+  StrList.LoadFromFile(szAppPath + '\WskData\wsItems.dat');
+  for I := 0 to StrList.Count - 1 do
+  begin
+    szIP := StrList.Strings[I];
+    szSubIP := StringReplace(szIP, '.', '_', [rfReplaceAll]);
+    szFileName := szSubIP + '.txt';
+
+    if FileExists(szAppPath + '\WskData\' + szFileName) then
+    begin
+      CopyFile(PChar(szAppPath + '\WskData\' + szFileName), PChar(szAppPath + '\FtpConfigData\' + szFileName), False);
+    end;
+  end;
+
+  fFtpFileItems.Directory := szAppPath + '\FtpConfigData';
+  fFtpFileItems.Update;
+
+  KillFtpExeTask;
+
+  for I := 0 to fFtpFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFtpFileItems.Items[I];
+    if (szFileName = 'ftpsrvItems.dat') or
+      (szFileName = 'wsItems.dat') then
+      Continue;
+
+    nOk := AutoUploadConfigFileToServer(szFileName,
+      szServerIP, szUser, szPSW);
+    StatusBar1.Panels[2].Text := '上传目标Ftp服务器上传文件成功：' + szFileName;
+    Delay(1000);
+
+    if nOk = 0 then
+    begin
+      AddLog('上传目标Ftp服务器上传文件失败：' + szFileName);
+      ShowMessage('上传目标Ftp服务器上传文件失败：' + szServerIP);
+      Exit;
+    end;
+
+    AddLog('上传目标Ftp服务器上传文件成功：' + szFileName);
+  end;
+
+  szFileName := 'wsItems.dat';
+  StrList.LoadFromFile(szAppPath + '\WskData\wsItems.dat');
+  for I := 0 to StrList.Count - 1 do
+  begin
+    szIP := StrList.Strings[I];
+    szSubIP := StringReplace(szIP, '.', '_', [rfReplaceAll]);
+    szFileName := szSubIP + '.txt';
+
+    if FileExists(szAppPath + '\WskData\' + szFileName) then
+    begin
+      DeleteFile(szAppPath + '\FtpConfigData\' + szFileName);
+    end;
+  end;
+
+  fFtpFileItems.Directory := szAppPath + '\FtpConfigData';
+  fFtpFileItems.Update;
+
+  szFileName := 'wsItems.dat';
+  nOk := AutoUploadConfigFileToServer(szFileName,
+    szServerIP, szUser, szPSW);
+  Delay(1000);
+
+  if nOk = 0 then
+  begin
+    AddLog('上传目标Ftp服务器下行配置文件失败：' + szFileName);
+    ShowMessage('上传目标Ftp服务器下行配置文件失败：' + szServerIP);
+    Exit;
+  end else
+    StatusBar1.Panels[2].Text := '上传目标Ftp服务器下行配置文件成功：' + szFileName;
+
+  StrList.Clear;
+  for I := 0 to lstFtpServerUploadItems.Count - 1 do
+  begin
+    szIP := lstFtpServerUploadItems.Items[I];
+    if szIP = '127.0.0.1' then
+    begin
+      Continue;
+    end;
+
+    StrList.Add(szIP);
+  end;
+
+  szFileName := szAppPath + '\FtpData\ftpsrvItems.dat';
+  StrList.SaveToFile(szFileName);
+
+  szFileName := 'ftpsrvItems.dat';
+  nOk := AutoUploadConfigFileToServer(szFileName,
+    szServerIP, szUser, szPSW);
+  Delay(1000);
+
+  if nOk = 0 then
+  begin
+    AddLog('上传目标Ftp服务器上行配置文件失败：' + szFileName);
+    ShowMessage('上传目标Ftp服务器上行配置文件失败：' + szServerIP);
+    Exit;
+  end else
+    StatusBar1.Panels[2].Text := '上传目标Ftp服务器上行配置文件成功：' + szFileName;
+
+  StatusBar1.Panels[2].Text := '上传目标Ftp服务器配置文件结束';
+
+  Result := 1;
+end;
+
+procedure TfrmMain.Button6Click(Sender: TObject);
+var
+  I, nOk: Integer;
+  szTxt, szServerIP, szWorkUser, szWorkPSW, szUser, szPSW, szFileName: string;
+begin
+  if TimFtp.Enabled1 then
+  begin
+    ShowMessage('Ftp扫描服务正运行，请先停止！');
+    Exit;
+  end;
+
+  if TimWeb.Enabled1 then
+  begin
+    ShowMessage('Web扫描服务正运行，请先停止！');
+    Exit;
+  end;
+
+  if lstFtpServerUploadItems.Items.Count = 0 then
+  begin
+    ShowMessage('服务器地址列表为空！');
+    Exit;
+  end;
+
+  if lstFtpServerUploadItems.ItemIndex < 0 then
+  begin
+    ShowMessage('请选择一个Url地址！');
+    Exit;
+  end;
+
+  Button6.Enabled := False;
+  Button20.Enabled := False;
+  Button21.Enabled := False;
+  AdvDirectoryEdit1.Enabled := False;
+  SpeedButton6.Enabled := False;
+
+  szTxt := lstFtpServerUploadItems.Items[lstFtpServerUploadItems.ItemIndex];
+  szTxt := StringReplace(szTxt, '|', ',', [rfReplaceAll]);
+
+  StrList.CommaText := szTxt;
+  szServerIP := StrList.Strings[0];
+  szUser := StrList.Strings[1];
+  szPSW := StrList.Strings[2];
+  szWorkUser := StrList.Strings[3];
+  szWorkPSW := StrList.Strings[4];
+
+  AddLog('开始上传Ftp服务器配置信息：' + szServerIP);
+
+  if szServerIP <> '127.0.0.1' then
+    InitUploadConfigDataToFtpServer;
+
+  nOk := UploadConfigDataToFtpServer(szServerIP, szUser, szPSW);
+
+  if nOk = 0 then
+  begin
+    ShowMessage('上传服务器配置信息失败：' + szServerIP);
+  end else
+  begin
+    ShowMessage('上传服务器配置信息成功：' + szServerIP);
+  end;
+
+  Button6.Enabled := True;
+  Button20.Enabled := True;
+  Button21.Enabled := True;
+  AdvDirectoryEdit1.Enabled := True;
+  SpeedButton6.Enabled := True;
+end;
+
+procedure TfrmMain.ClearFtpDataDir;
+var
+  I: Integer;
+  szDir, szFileName: string;
+begin
+  szDir := szAppPath + '\FtpData';
+  if AdvDirectoryEdit1.Text = szDir then
+    Exit;
+
+  fFileItems.Directory := szAppPath + '\FtpData';
+  fFileItems.Update;
+
+  for I := 0 to fFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFileItems.Items[I];
+    szFileName := szAppPath + '\FtpData\' + szFileName;
+
+    DeleteFile(szFileName);
+    AddLog('删除FtpData文件：' + szFileName);
+  end;
+
+  AddLog('删除FtpData文件结束！');
+end;
+
+procedure TfrmMain.CopyFilesToFtpDataDir;
+var
+  I: Integer;
+  szFileName, szDir, szFtpDataFileName: string;
+begin
+  szDir := szAppPath + '\FtpData';
+  if AdvDirectoryEdit1.Text = szDir then
+    Exit;
+
+  fFtpFileItems.Directory := AdvDirectoryEdit1.Text;
+  fFtpFileItems.Update;
+
+  for I := 0 to fFtpFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFtpFileItems.Items[I];
+    szFileName := AdvDirectoryEdit1.Text + '\' + fFtpFileItems.Items[I];
+    szFtpDataFileName := szAppPath + '\FtpData\' + fFtpFileItems.Items[I];
+
+    CopyFile(PChar(szFileName), PChar(szFtpDataFileName), False);
+    AddLog('拷贝FtpData文件：' + szFileName);
+  end;
+
+  AddLog('拷贝FtpData文件结束！');
+end;
+
+procedure TfrmMain.SaveWebSiteItemsToFile(bConfigData: Boolean = False);
+var
+  I: Integer;
+  szUrl, szSubUrl: string;
+begin
+  StrList.Clear;
+  for I := 0 to lstUrlUploadItems.Items.Count - 1 do
+  begin
+    szUrl := lstUrlUploadItems.Items[I];
+    StrList.Add(szUrl);
+  end;
+
+  if not bConfigData then
+  begin
+    StrList.SaveToFile(szAppPath + '\WskData\wsItems.dat');
+  end else
+  begin
+    StrList.SaveToFile(szAppPath + '\FtpConfigData\wsItems.dat');
+  end;
+end;
+
+procedure TfrmMain.ClearFtpDataConfigDir;
+var
+  I: Integer;
+  szFileName: string;
+begin
+  fFileItems.Directory := szAppPath + '\FtpConfigData';
+  fFileItems.Update;
+
+  for I := 0 to fFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFileItems.Items[I];
+    szFileName := szAppPath + '\FtpConfigData\' + szFileName;
+
+    DeleteFile(szFileName);
+    AddLog('删除FtpConfigData文件：' + szFileName);
+  end;
+
+  AddLog('删除FtpConfigData文件结束！');
+end;
+
+procedure TfrmMain.CopyFilesToFtpDataConfigDir;
+var
+  I: Integer;
+  szFileName, szFtpDataFileName: string;
+begin
+  Exit;
+
+  fFtpFileItems.Directory := AdvDirectoryEdit1.Text;
+  fFtpFileItems.Update;
+
+  for I := 0 to fFtpFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFtpFileItems.Items[I];
+    szFileName := AdvDirectoryEdit1.Text + '\' + fFtpFileItems.Items[I];
+    szFtpDataFileName := szAppPath + '\FtpConfigData\' + fFtpFileItems.Items[I];
+
+    CopyFile(PChar(szFileName), PChar(szFtpDataFileName), False);
+    AddLog('拷贝FtpConfigData文件：' + szFileName);
+  end;
+
+  AddLog('拷贝FtpConfigData文件结束！');
+end;
+
+procedure TfrmMain.SaveFtpServerItemsToFile(bConfigData: Boolean = False);
+var
+  I: Integer;
+  szServerTxt: string;
+begin
+  StrList.Clear;
+  for I := 0 to lstFtpServerUploadItems.Items.Count - 1 do
+  begin
+    szServerTxt := lstFtpServerUploadItems.Items[I];
+    StrList.Add(szServerTxt);
+  end;
+
+  if not bConfigData then
+  begin
+    StrList.SaveToFile(szAppPath + '\FtpData\ftpsrvItems.dat');
+  end else
+  begin
+    StrList.SaveToFile(szAppPath + '\FtpConfigData\ftpsrvItems.dat');
+  end;
+end;
+
+procedure TfrmMain.LoadFtpDataItemsFromFile;
+var
+  I, J, k: Integer;
+  szFileName, szTxt, szUrl, szFtpItem: string;
+begin
+  szFileName := szAppPath + '\FtpData\ftpsrvItems.dat';
+  if not FileExists(szFileName) then
+  begin
+    AddLog('Ftp服务器列表文件: ' + szFileName + ' 不存在！');
+    Exit;
+  end;
+
+  lstFtpServerUploadItems.Clear;
+  lstFtpServerItems.Clear;
+  StrList.LoadFromFile(szFileName);
+  if StrList.Count = 0 then
+    Exit;
+
+  for k := 0 to StrList.Count - 1 do
+  begin
+    szUrl := StrList.Strings[k];
+    szTxt := StringReplace(szUrl, '|', ',', [rfReplaceAll]);
+    StrWords.CommaText := szTxt;
+    if StrWords.Count < 5 then
+      Continue;
+
+    lstFtpServerUploadItems.Items.Add(StrWords.Strings[0] + '|' +
+      StrWords.Strings[1] + '|' +
+      StrWords.Strings[2] + '|' +
+      StrWords.Strings[3] + '|' +
+      StrWords.Strings[4]);
+
+    if (StrWords.Strings[0] = '127.0.0.1') and
+      (not ckbAddSelfIP.Checked) then
+      Continue;
+
+    lstFtpServerItems.Items.Add(StrWords.Strings[0] + '|' +
+      StrWords.Strings[3] + '|' +
+      StrWords.Strings[4]);
+
+    AddLog('添加服务站访问列表: ' + szUrl);
+  end;
+
+  lstFtpServerItems.ItemIndex := 0;
+  if lstFtpServerItems.Items.Count = 0 then
+  begin
+    AddLog('服务器列表为空！');
+    Exit;
+  end;
+
+  fFileItems.Directory := szAppPath + '\FtpData';
+  fFileItems.Update;
+
+  if fFileItems.Items.Count = 0 then
+  begin
+    AddLog('Ftp上传文件列表为空！');
+    Exit;
+  end;
+
+  lstFtpUploadItems.Clear;
+  for I := 0 to lstFtpServerItems.Items.Count - 1 do
+  begin
+    for J := 0 to fFileItems.Items.Count - 1 do
+    begin
+      szFtpItem := fFileItems.Items[J];
+      if UpperCase(szFtpItem) = 'FTPSRVITEMS.DAT' then
+        Continue;
+
+      szFtpItem := lstFtpServerItems.Items[I] + '|' +
+        fFileItems.Items[J];
+
+      lstFtpUploadItems.Items.Add(szFtpItem);
+      AddLog('添加Ftp服务站上传文件列表: ' + szFtpItem);
+    end;
+  end;
+
+  lstFtpUploadItems.ItemIndex := 0;
+end;
+
+procedure TfrmMain.CreateFtpConfigDataFileEx(szFileName, szIPAddr,
+  szSrvUserName, szsrvPSW: string; nFileType: Integer = 2);
+var
+  szPath, szDrv, szDir, szSendFile: string;
+begin
+  szSendFile := szAppPath + '\FtpConfigData\' + szFileName;
+//  if ckbCurlMode.Checked then
+//  begin
+//    szPath := szAppPath;
+//    szDrv := Copy(szPath, 1, 2);
+//    szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+//
+//    mmTest.Clear;
+//    mmTest.Lines.Add(szDrv);
+//    mmTest.Lines.Add('path = c:\windows\system32');
+//    mmTest.Lines.Add('cd ' + szPath);
+//    mmTest.Lines.Add('curl --trace result_u.tx -u ' + szSrvUserName + ':' + szsrvPSW + ' -T ' + szSendFile + ' ftp://' + szIPAddr);
+//    mmTest.Lines.Add('rename result_u.tx' + ' result_u.txx');
+////  mmTest.Lines.Add('time');
+//
+//    mmTest.Lines.SaveToFile(szAppPath + '\ftp_u' + '.bat');
+//
+//    Exit;
+//  end;
+
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('send ' + szSendFile + ' ' + szFileName);
+  if nFileType = 0 then
+  begin
+    mmTest.Lines.Add('rename ' + 'srvstop.dat_ ' + 'srvstop.dat');
+  end else
+  begin
+    mmTest.Lines.Add('rename ' + 'srvstart.dat_ ' + 'srvstart.dat');
+  end;
+
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_u' + '.txx');
+end;
+
+function TfrmMain.AutoUploadConfigFileToServer(szFileName, szSrvIp,
+  szSrvUserName, szsrvPSW: string; nFileType: Integer = 2): Integer;
+var
+  nTotalSeconds: Integer;
+  nStartTick, nCurrTick: Cardinal;
+  szTemp: string;
+begin
+  Result := 1;
+  szTemp := lbTemp.Caption;
+
+  AddLog(' 开始FTP上传: ' + szFileName + '... ...');
+  CreateFtpConfigDataFileEx(szFileName, szSrvIp, szSrvUserName, szsrvPSW, nFileType);
+
+  DeleteFile(szAppPath + '\result_u' + '.txx');
+//  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_u.bat'), nil, nil, SW_SHOWNORMAL);
+  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_u.bat'), nil, nil, SW_HIDE);
+
+  nTotalSeconds := 0;
+  lbTemp.Caption := szFileName;
+  Button6.Caption := IntToStr(nTotalSeconds);
+
+  nStartTick := GetTickCount;
+  while True do
+  begin
+    Application.ProcessMessages;
+
+    nCurrTick := GetTickCount;
+    if (nCurrTick - nStartTick) > 1000 then
+    begin
+      nStartTick := nCurrTick;
+      Inc(nTotalSeconds);
+      Button6.Caption := IntToStr(nTotalSeconds);
+
+      if nTotalSeconds > 1800 then
+      begin
+        AddLog(' FTP上传文件: ' + szFileName + ' 超时(1800秒)退出！');
+        Result := 0;
+
+        Break;
+      end else
+      begin
+        Continue;
+      end;
+    end;
+
+    if FileExists(szAppPath + '\result_u' + '.txx') then
+    begin
+      Delay(1000);
+      mmFtpTxt.Lines.LoadFromFile(szAppPath + '\result_u' + '.txx');
+
+//      if ckbCurlMode.Checked then
+//      begin
+//        if Pos('We are completely uploaded and fine', mmFtpTxt.Text) > 0 then
+//          AddLog(' FTP上传文件: ' + szFileName + ' 成功！')
+//        else
+//        begin
+//          AddLog(' FTP上传文件: ' + szFileName + ' 失败！');
+//          Result := 0;
+//        end;
+//      end else
+//      begin
+      if Pos('Transfer complete', mmFtpTxt.Text) > 0 then
+        AddLog(' FTP上传文件: ' + szFileName + ' 成功！')
+      else
+      begin
+        AddLog(' FTP上传文件: ' + szFileName + ' 失败！');
+        Result := 0;
+      end;
+//      end;
+//      AddLog(' FTP上传文件: ' + szFileName + ' 成功！');
+      Break;
+    end;
+  end;
+
+  lbTemp.Caption := szTemp;
+  Button6.Caption := '上传配置信息';
+end;
+
+procedure TfrmMain.Button13Click(Sender: TObject);
+var
+  bInitFtpData: Boolean;
+  I, nOk: Integer;
+  szTxt, szServerIP, szUser, szPSW, szFileName: string;
+begin
+  if TimFtp.Enabled1 then
+  begin
+    ShowMessage('Ftp扫描服务正运行，请先停止！');
+    Exit;
+  end;
+
+  if TimWeb.Enabled1 then
+  begin
+    ShowMessage('Web扫描服务正运行，请先停止！');
+    Exit;
+  end;
+
+  if lstFtpServerUploadItems.Items.Count = 0 then
+  begin
+    ShowMessage('服务器地址列表为空！');
+    Exit;
+  end;
+
+  Button13.Enabled := False;
+  bInitFtpData := False;
+  for I := 0 to lstFtpServerUploadItems.Items.Count - 1 do
+  begin
+    lstFtpServerUploadItems.ItemIndex := I;
+
+    szTxt := lstFtpServerUploadItems.Items[lstFtpServerUploadItems.ItemIndex];
+    szTxt := StringReplace(szTxt, '|', ',', [rfReplaceAll]);
+
+    StrList.CommaText := szTxt;
+    szServerIP := StrList.Strings[0];
+    szUser := StrList.Strings[1];
+    szPSW := StrList.Strings[2];
+
+    AddLog('开始上传Ftp服务器配置信息：' + szServerIP);
+
+    if (szServerIP <> '127.0.0.1') and (not bInitFtpData) then
+    begin
+      bInitFtpData := True;
+      InitUploadConfigDataToFtpServer;
+    end;
+    nOk := UploadConfigDataToFtpServer(szServerIP, szUser, szPSW);
+
+    if nOk = 0 then
+    begin
+      ShowMessage('上传服务器配置信息失败：' + szServerIP);
+      Break;
+    end;
+
+    Delay(1000);
+  end;
+
+  if nOk <> 0 then
+  begin
+    ShowMessage('上传服务器配置信息成功：' + szServerIP);
+  end;
+
+  Button13.Enabled := True;
+end;
+
+procedure TfrmMain.InitUploadConfigDataToFtpServer();
+begin
+  //---清空当前FtpDataConfig目录
+//  ClearFtpDataConfigDir;
+
+  //---拷贝FtpData文件
+//  CopyFilesToFtpDataConfigDir;
+
+  //---拷贝FtpSrvItems文件
+  SaveFtpServerItemsToFile(True);
+
+  //--拷贝WebSiteItems文件
+  SaveWebSiteItemsToFile(True);
+end;
+
+procedure TfrmMain.TimUploadScanTimer(Sender: TObject);
+var
+  bWsConfigFound, bFtpConfigFound, bFileItemFound: Boolean;
+  I, nCount: Integer;
+  szFileName, szIP, szSubIP: string;
+begin
+  if FIsServerEnabled then Exit;
+  if FIsUploadScanWorking then Exit;
+  if (edConfigDataDir.Text = '') or (not DirectoryExists(edConfigDataDir.Text)) then
+    Exit;
+
+  fFtpUploadFileItems.Directory := edConfigDataDir.Text;
+  fFtpUploadFileItems.Update;
+
+  if fFtpUploadFileItems.Items.Count > 0 then
+    FIsUploadScanWorking := True;
+
+  //----查询 srvstart.dat文件，停止扫描循环---
+  bWsConfigFound := False;
+  bFtpConfigFound := False;
+  nCount := fFtpUploadFileItems.Items.Count;
+  for I := 0 to nCount - 1 do
+  begin
+    szFileName := fFtpUploadFileItems.Items[I];
+    if (szFileName = 'wsItems.dat') then
+    begin
+      bWsConfigFound := True;
+      Continue;
+    end;
+
+    if (szFileName = 'ftpsrvItems.dat') then
+    begin
+      bFtpConfigFound := True;
+      Continue;
+    end;
+  end;
+
+  if bWsConfigFound then
+  begin
+    TimWeb.Enabled1 := False;
+    iSevenSegmentClock2.SetTimeInSeconds(0);
+    AddWebLog('网站列表自动访问停止！');
+
+    szFileName := edConfigDataDir.Text + '\wsItems.dat';
+    CopyFile(PChar(szFileName), PChar(szAppPath + '\WskData\wsItems.dat'), False);
+    AddWebLog('提取网站列表配置文件：' + szFileName);
+
+    StrList.Clear;
+    StrList.LoadFromFile(szFileName);
+
+    for I := 0 to StrList.Count - 1 do
+    begin
+      szIP := StrList.Strings[I];
+      szSubIP := StringReplace(szIP, '.', '_', [rfReplaceAll]);
+
+      szFileName := edConfigDataDir.Text + '\' + szSubIP + '.txt';
+      CopyFile(PChar(szFileName), PChar(szAppPath + '\WskData\' + szSubIP + '.txt'), False);
+      AddWebLog('提取网站子列表配置文件：' + szFileName);
+
+      DeleteFile(szFileName);
+    end;
+
+    szFileName := edConfigDataDir.Text + '\wsItems.dat';
+    DeleteFile(szFileName);
+    LoadWebsiteItemsFromFile;
+    AddWebLog('提取网站列表配置文件结束！');
+
+    FIEFrameWnd := FindWindow('IEFrame', nil);
+    if FIEFrameWnd <> 0 then
+    begin
+      PostMessage(FIEFrameWnd, WM_CLOSE, 0, 0);
+      VariantClear(IEAppObj);
+      VariantInit(IEAppObj);
+      Delay(20000);
+    end;
+
+    iSevenSegmentClock2.SetTimeInSeconds(StrToInt(edWebsiteRunInteveral.Text) * 60);
+    if dxBarLargeButton17.Enabled then
+    begin
+      StartExecWebsiteItems;
+      Button18.Caption := '停止扫描';
+      AddWebLog('启动网站列表自动访问！');
+    end;
+
+    FIsUploadScanWorking := False;
+    Delay(10000);
+
+    Exit;
+  end;
+
+  if bFtpConfigFound then
+  begin
+    TimFtp.Enabled1 := False;
+    iSevenSegmentClock3.SetTimeInSeconds(0);
+
+    AddLog('Ftp服务器列表自动上传停止！');
+
+    AddLog('开始清除FtpData数据文件... ...');
+    ClearRmtFtpDataDir;
+    AddLog('清除FtpData数据文件结束！');
+
+    szFileName := edConfigDataDir.Text + '\ftpsrvItems.dat';
+    CopyFile(PChar(szFileName), PChar(szAppPath + '\FtpData\ftpsrvItems.dat'), False);
+    AddLog('提取Ftp数据配置文件：' + szFileName);
+
+    DeleteFile(szFileName);
+    CopyFtpUploadConfigFiles;
+
+    LoadFtpDataItemsFromFile;
+
+    iSevenSegmentClock3.SetTimeInSeconds(StrToInt(edFtpRunInteveral.Text) * 60);
+
+    if lstFtpUploadItems.ItemIndex < 0 then
+      lstFtpUploadItems.ItemIndex := 0;
+
+    AddLog('提取Ftp数据配置文件结束！');
+
+    if dxBarLargeButton17.Enabled then
+    begin
+      StartExecFtpItems;
+
+      Button19.Caption := '停止扫描';
+      AddLog('启动Ftp服务器列表自动上传！');
+    end;
+//    AutoExecFtpItems;
+  end;
+
+  FIsUploadScanWorking := False;
+end;
+
+procedure TfrmMain.dxBarLargeButton2Click(Sender: TObject);
+begin
+  FIsServerEnabled := True;
+  FServerStartTime := GetTickCount;
+
+  dxBarLargeButton2.Enabled := False;
+  dxBarLargeButton17.Enabled := True;
+  edFtpRunInteveral.Enabled := False;
+  edWebsiteRunInteveral.Enabled := False;
+
+  fFtpStartTime := now;
+  iSevenSegmentClock3.SetTimeInSeconds(StrToInt(edFtpRunInteveral.Text) * 60);
+
+  if lstFtpUploadItems.ItemIndex < 0 then
+    lstFtpUploadItems.ItemIndex := 0;
+
+  AutoExecFtpItems;
+
+  StartExecFtpItems;
+  Button19.Caption := '停止扫描';
+
+  fWebStartTime := GetTickCount;
+  iSevenSegmentClock2.SetTimeInSeconds(StrToInt(edWebsiteRunInteveral.Text) * 60);
+
+  AutoExecWebsiteItems;
+  StartExecWebsiteItems;
+
+  Button18.Caption := '停止扫描';
+end;
+
+procedure TfrmMain.TimInitTimer(Sender: TObject);
+begin
+  TimInit.Enabled := False;
+
+  if ckbAutoStartSrv.Checked then
+  begin
+    dxBarLargeButton2Click(nil);
+  end;
+end;
+
+procedure TfrmMain.CopyFtpUploadConfigFiles;
+var
+  I: Integer;
+  szFileName, szDestFileName: string;
+begin
+  fFtpUploadFileItems.Directory := edConfigDataDir.Text;
+  fFtpUploadFileItems.Update;
+
+  if fFtpUploadFileItems.Items.Count = 0 then
+    Exit;
+
+  StrList.Clear;
+  for I := 0 to fFtpUploadFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFtpUploadFileItems.Items[I];
+    if (szFileName = 'wsItems.dat') or
+      (szFileName = 'ftpItems.dat') then
+      Continue;
+
+    StrList.Add(szFileName);
+  end;
+
+  for I := 0 to StrList.Count - 1 do
+  begin
+    szFileName := fFtpUploadFileItems.Directory + '\' + StrList.Strings[I];
+    szDestFileName := szAppPath + '\FtpData\' + StrList.Strings[I];
+
+//    ShowMessage(szFileName);
+    CopyFile(PChar(szFileName), PChar(szDestFileName), False);
+    DeleteFile(szFileName);
+  end;
+end;
+
+procedure TfrmMain.FTPDownloadFile(szFileName, szLocalFileName, sHost, sPort, sUser, sPsw: string);
+begin
+  if not IsFTPConnected then Exit;
+
+  CreateDownloadFileFromSrvEx(szFileName, szLocalFileName, sHost, sUser, sPsw);
+
+  DeleteFile(szAppPath + '\result_m' + '.txx');
+  if ckbCurlMode.Checked then
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_curl.bat'), nil, nil, SW_HIDE)
+  else
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_HIDE);
+end;
+
+procedure TfrmMain.CreateFtpConnectSrvEx(szIPAddr,
+  szSrvUserName, szsrvPSW: string);
+begin
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.txx');
+end;
+
+procedure TfrmMain.CreateFtpSendFileToSrvEx(szFileName, szIPAddr,
+  szSrvUserName, szsrvPSW: string);
+var
+  szSendFileName: string;
+  szDrv, szDir, szPath: string;
+begin
+  if ckbCurlMode.Checked then
+  begin
+    szPath := szAppPath;
+    szDrv := Copy(szPath, 1, 2);
+    szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+    mmTest.Clear;
+    mmTest.Lines.Add(szDrv);
+    mmTest.Lines.Add('path = c:\windows\system32');
+    mmTest.Lines.Add('cd ' + szPath);
+    mmTest.Lines.Add('curl --trace result_m.tx -u ' + szSrvUserName + ':' + szsrvPSW + ' -T ' + szFileName + ' ftp://' + szIPAddr);
+    mmTest.Lines.Add('rename result_m.tx' + ' result_m.txx');
+//  mmTest.Lines.Add('time');
+
+    mmTest.Lines.SaveToFile(szAppPath + '\ftp_curl' + '.bat');
+
+    Exit;
+  end;
+
+  szSendFileName := ExtractFileName(szFileName);
+
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('send ' + szFileName + ' ' + szSendFileName);
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.txx');
+end;
+
+procedure TfrmMain.FTPServeFileList(sHost, sPort, sUser,
+  sPsw: string);
+begin
+  if not IsFTPConnected then Exit;
+
+  CreateFtpListFileFromSrvEx(sHost, sUser, sPsw);
+
+  DeleteFile(szAppPath + '\result_m' + '.txx');
+  if ckbCurlMode.Checked then
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_curl.bat'), nil, nil, SW_HIDE)
+  else
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_HIDE);
+end;
+
+procedure TfrmMain.CreateFtpListFileFromSrvEx(szIPAddr, szSrvUserName,
+  szsrvPSW: string);
+var
+  szDrv, szDir, szPath: string;
+begin
+  if ckbCurlMode.Checked then
+  begin
+    szPath := szAppPath;
+    szDrv := Copy(szPath, 1, 2);
+    szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+    mmTest.Clear;
+    mmTest.Lines.Add(szDrv);
+    mmTest.Lines.Add('path = c:\windows\system32');
+    mmTest.Lines.Add('cd ' + szPath);
+    mmTest.Lines.Add('curl --trace result_m.tx -u ' + szSrvUserName + ':' + szsrvPSW + ' ftp://' + szIPAddr + ' >fl.txt');
+    mmTest.Lines.Add('rename result_m.tx' + ' result_m.txx');
+//  mmTest.Lines.Add('time');
+
+    mmTest.Lines.SaveToFile(szAppPath + '\ftp_curl' + '.bat');
+
+    Exit;
+  end;
+
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('ls');
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.txx');
+end;
+
+procedure TfrmMain.CreateDownloadFileFromSrvEx(szFileName, szLocalFileName,
+  szIPAddr, szSrvUserName, szsrvPSW: string);
+var
+  szDownloadFileName: string;
+  szDrv, szDir, szPath: string;
+begin
+  szDownloadFileName := ExtractFileName(szFileName);
+  if ckbCurlMode.Checked then
+  begin
+    szPath := szAppPath;
+    szDrv := Copy(szPath, 1, 2);
+    szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+    mmTest.Clear;
+    mmTest.Lines.Add(szDrv);
+    mmTest.Lines.Add('path = c:\windows\system32');
+    mmTest.Lines.Add('cd ' + szPath);
+    mmTest.Lines.Add('curl --trace result_m.tx -u ' + szSrvUserName + ':' + szsrvPSW + ' ftp://' + szIPAddr + '/' + szDownloadFileName + ' -o ' + szLocalFileName + ' >fl.txt');
+    mmTest.Lines.Add('rename result_m.tx' + ' result_m.txx');
+//  mmTest.Lines.Add('time');
+
+    mmTest.Lines.SaveToFile(szAppPath + '\ftp_curl' + '.bat');
+
+    Exit;
+  end;
+
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('get ' + szFileName + ' ' + szLocalFileName);
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.txx');
+end;
+
+procedure TfrmMain.FTPServeDeleteFile(szFileName, sHost, sPort, sUser,
+  sPsw: string);
+begin
+  if not IsFTPConnected then Exit;
+
+  CreateFtpDeleteFileFromSrvEx(szFileName, sHost, sUser, sPsw);
+
+  DeleteFile(szAppPath + '\result_m' + '.txx');
+  if ckbCurlMode.Checked then
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_curl.bat'), nil, nil, SW_HIDE)
+  else
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_HIDE);
+end;
+
+procedure TfrmMain.CreateFtpDeleteFileFromSrvEx(szFileName, szIPAddr,
+  szSrvUserName, szsrvPSW: string);
+var
+  szDeleteFileName: string;
+  szDrv, szDir, szPath: string;
+begin
+  if ckbCurlMode.Checked then
+  begin
+    szPath := szAppPath;
+    szDrv := Copy(szPath, 1, 2);
+    szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+    mmTest.Clear;
+    mmTest.Lines.Add(szDrv);
+    mmTest.Lines.Add('path = c:\windows\system32');
+    mmTest.Lines.Add('cd ' + szPath);
+    mmTest.Lines.Add('curl --trace result_m.tx -u ' + szSrvUserName + ':' + szsrvPSW + ' ftp://' + szIPAddr + ' -X "DELE ' + szFileName + '"');
+    mmTest.Lines.Add('rename result_m.tx' + ' result_m.txx');
+//  mmTest.Lines.Add('time');
+// curl -u "user:passwd" ftp://192.168.0.100/aaDir/ -X "DELE aa.txt"
+    mmTest.Lines.SaveToFile(szAppPath + '\ftp_curl' + '.bat');
+
+    Exit;
+  end;
+
+  szDeleteFileName := szFileName;
+
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('delete ' + szFileName);
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.txx');
+end;
+
+procedure TfrmMain.FTPServeDeleteAllFiles(sHost, sPort, sUser,
+  sPsw: string);
+begin
+  if not IsFTPConnected then Exit;
+
+  CreateFtpDeleteAllFilesFromSrvEx(sHost, sUser, sPsw);
+
+  DeleteFile(szAppPath + '\result_m' + '.txx');
+  if ckbCurlMode.Checked then
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_curl.bat'), nil, nil, SW_HIDE)
+  else
+    ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_m.bat'), nil, nil, SW_HIDE);
+end;
+
+procedure TfrmMain.CreateFtpDeleteAllFilesFromSrvEx(szIPAddr, szSrvUserName,
+  szsrvPSW: string);
+begin
+  mmTest.Clear;
+  mmTest.Lines.Add('Open ' + szIPAddr + ' ' + '21');
+  mmTest.Lines.Add(szSrvUserName);
+  mmTest.Lines.Add(szsrvPSW);
+  mmTest.Lines.Add('prompt');
+  mmTest.Lines.Add('mdelete *');
+  mmTest.Lines.Add('bye');
+  mmTest.Lines.SaveToFile(szAppPath + '\ftp_m' + '.txx');
+end;
+
+procedure TfrmMain.KillFtpExeTask;
+begin
+//  if ckbCurlMode.Checked then Exit;
+  if not FileExists(szAppPath + '\ftp_k.bat') then
+    Exit;
+
+  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_k.bat'), nil, nil, SW_HIDE);
+//  ShellExecute(Application.handle, nil, PChar(szAppPath + '\ftp_k.bat'), nil, nil, SW_SHOWNORMAL);
+  Delay(1000);
+end;
+
+procedure TfrmMain.CheckResult(b: Boolean);
+begin
+  if not b then
+    raise Exception.Create(SysErrorMessage(GetLastError));
+end;
+
+function TfrmMain.RunDOS(const CommandLine: string): string;
+var
+  HRead, HWrite: THandle;
+  StartInfo: TStartupInfo;
+  ProceInfo: TProcessInformation;
+  b: Boolean;
+  sa: TSecurityAttributes;
+  inS: THandleStream;
+  sRet: TStrings;
+begin
+  Result := '';
+  FillChar(sa, sizeof(sa), 0);
+//设置允许继承，否则在NT和2000下无法取得输出结果
+  sa.nLength := sizeof(sa);
+  sa.bInheritHandle := True;
+  sa.lpSecurityDescriptor := nil;
+  b := CreatePipe(HRead, HWrite, @sa, 0);
+  CheckResult(b);
+
+  FillChar(StartInfo, SizeOf(StartInfo), 0);
+  StartInfo.cb := SizeOf(StartInfo);
+  StartInfo.wShowWindow := SW_HIDE;
+//使用指定的句柄作为标准输入输出的文件句柄,使用指定的显示方式
+  StartInfo.dwFlags := STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW;
+  StartInfo.hStdError := HWrite;
+  StartInfo.hStdInput := GetStdHandle(STD_INPUT_HANDLE); //HRead;
+  StartInfo.hStdOutput := HWrite;
+
+  b := CreateProcess(nil, //lpApplicationName: PChar
+    PChar(CommandLine), //lpCommandLine: PChar
+    nil, //lpProcessAttributes: PSecurityAttributes
+    nil, //lpThreadAttributes: PSecurityAttributes
+    True, //bInheritHandles: BOOL
+    CREATE_NEW_CONSOLE,
+    nil,
+    nil,
+    StartInfo,
+    ProceInfo);
+
+  CheckResult(b);
+  WaitForSingleObject(ProceInfo.hProcess, INFINITE);
+
+  inS := THandleStream.Create(HRead);
+  if inS.Size > 0 then
+  begin
+    sRet := TStringList.Create;
+    sRet.LoadFromStream(inS);
+    Result := sRet.Text;
+    sRet.Free;
+  end;
+  inS.Free;
+
+  CloseHandle(HRead);
+  CloseHandle(HWrite);
+end;
+
+procedure TfrmMain.Button16Click(Sender: TObject);
+var
+  szTxt: string;
+begin
+  Button16.Enabled := False;
+  szTxt := RunDOS('D:\curl\bin\curl --help');
+//  RunDOS('ping www.baidu.com');
+//  szTxt := RunDOS('ping www.baidu.com');
+  ShowMessage(szTxt);
+  Memo1.Text := szTxt;
+  Button16.Enabled := True;
+end;
+
+procedure TfrmMain.ClearRmtFtpDataDir;
+var
+  I: Integer;
+  szDir, szFileName: string;
+begin
+  fFileItems.Directory := szAppPath + '\FtpData';
+  fFileItems.Update;
+
+  for I := 0 to fFileItems.Items.Count - 1 do
+  begin
+    szFileName := fFileItems.Items[I];
+    szFileName := szAppPath + '\FtpData\' + szFileName;
+
+    DeleteFile(szFileName);
+    AddLog('删除FtpData文件：' + szFileName);
+  end;
+end;
+
+procedure TfrmMain.edUrlClick(Sender: TObject);
+begin
+  edUrl.SelectAll;
+end;
+
+//获取子网址的代码
+procedure TfrmMain.ExtractWebsiteSubItems(szUrl: string);
+var
+  sz_Url, szSubUrl: string;
+
+  I, nCount, nItemIndex: Integer;
+  eLinks, eLink: OleVariant;
+begin
+  AddWebLog('开始创建浏览器对象... ...');
+  IEAppObj := CreateIEAutoObject;
+
+  //列表初始化
+  StrSubUrlItems.Clear;
+
+  //拼接网址头部
+  if Pos('WWW', UpperCase(szUrl)) = 1 then
+    sz_Url := 'https://' + szUrl;
+
+  AddWebLog('开始自动访问网站列表：' + sz_Url);
+  NavigateToTargetUrl(IEAppObj, sz_Url);
+
+   //如果访问网站未完成则释放浏览器对象IEAppObj
+  if not FIsTargetUrlComplete then
+  begin
+    lbUrlTemp.Caption := '访问网站错误：' + sz_Url;
+    CloseIEAutoObject(IEAppObj);
+    Exit;
+  end;
+
+  AddWebLog('开始提取子网站列表：' + sz_Url);
+
+  //声明对象 获取HTML的DOM对象  当访问一个网站实际是获得一个HTML文件 可以对齐解析
+  eLinks := IEAppObj.Document.Links;
+  nCount := eLinks.Length;
+
+  nItemIndex := 1;
+  //标签数循环
+  for I := 0 to nCount - 1 do
+  begin
+    eLink := IEAppObj.Document.Links[I];
+    //获取href的属性值（ 链接   ）
+    szSubUrl := eLink.GetAttribute('href');
+
+    //如果属性值为空 或者 包含 javascript字段 就跳过
+    if Trim(szSubUrl) = '' then
+      Continue;
+    if Pos('javascript:', szSubUrl) > 0 then
+      Continue;
+
+    AddWebLog('提取子网站列表：' + IntToStr(nItemIndex) + '---' + szSubUrl);
+    lbUrlTemp.Caption := '提取子网站列表：' + IntToStr(nItemIndex) + '---' + szSubUrl;
+     //获取到的链接 存入列表
+    StrSubUrlItems.Add(szSubUrl);
+    Inc(nItemIndex);
+  end;
+
+  AddWebLog('访问访问网站列表结束！');
+  lbUrlTemp.Caption := '访问访问网站列表结束！';
+
+  //释放对象 可能释放比较慢 所以延时20秒
+  CloseIEAutoObject(IEAppObj);
+  VariantClear(IEAppObj);
+  VariantInit(IEAppObj);
+  Delay(20000);
+end;
+
+procedure TfrmMain.CreateCurlBatFileEx(szUrl: string);
+var
+  szDrv, szDir, szPath: string;
+begin
+  szPath := szAppPath;
+  szDrv := Copy(szPath, 1, 2);
+  szDir := Copy(szPath, 3, StrLen(PChar(szPath)) - 2);
+
+  mmTest.Clear;
+  mmTest.Lines.Add(szDrv);
+  mmTest.Lines.Add('cd ' + szPath);
+  mmTest.Lines.Add('curl ' + szUrl + ' >cr.ht');
+  mmTest.Lines.Add('rename cr.ht cr.html');
+//  mmTest.Lines.Add('time');
+
+  mmTest.Lines.SaveToFile(szAppPath + '\curl_w' + '.bat');
+end;
+
+procedure TfrmMain.lstUrlUploadItemsClick(Sender: TObject);
+var
+  I: Integer;
+    szUrl, szSubUrl: string;
+begin
+  if lstUrlUploadItems.Count = 0 then
+    Exit;
+  if lstUrlUploadItems.ItemIndex = -1 then
+    Exit;
+
+  Button4.Enabled := False;
+  Button5.Enabled := False;
+  edUrl.Enabled := False;
+
+  StrList.Clear;
+  szUrl := lstUrlUploadItems.Items[lstUrlUploadItems.ItemIndex];
+  szSubUrl := StringReplace(szUrl, '.', '_', [rfReplaceAll]);
+  if FileExists(szAppPath + '\WskData\' + szSubUrl + '.txt') then
+    StrList.LoadFromFile(szAppPath + '\WskData\' + szSubUrl + '.txt');
+
+  lstSubUrlItems.Clear;
+  for I := 0 to StrList.Count - 1 do
+  begin
+    lstSubUrlItems.Items.Add(StrList.Strings[I]);
+  end;
+
+  Button4.Enabled := True;
+  Button5.Enabled := True;
+  edUrl.Enabled := True;
+end;
+
+procedure TfrmMain.SpeedButton1Click(Sender: TObject);
+begin
+
+  if Pos('https',lbledtURL.text)>0 then
+    LLTJ.text :=VisitHttps(lbledtURL.text)
+  else
+    LLTJ.text :=GetUrlFileSize(lbledtURL.text);
+end;
+
+Function TfrmMain.VisitHttps(Url: string):string;
+var
+  ResponseStream : TStringStream; //返回信息
+  FileSize: integer;
+   function BytesToStr(const i64Size: Int64): string;
+      const
+        i64GB = 1024 * 1024 * 1024;
+        i64MB = 1024 * 1024;
+        i64KB = 1024;
+      begin
+        if i64Size div i64GB > 0 then
+         Result := Format('%.2f GB ', [i64Size / i64GB])
+        else if i64Size div i64MB > 0 then
+         Result := Format('%.2f MB ', [i64Size / i64MB])
+        else if i64Size div i64KB > 0 then
+         Result := Format('%.2f KB ', [i64Size / i64KB])
+         else
+          Result := IntToStr(i64Size) + ' Byte';
+      end;
+begin
+  ResponseStream := TStringStream.Create('');
+  IdHTTP2.Get(url,ResponseStream);
+  FileSize :=ResponseStream.Size;
+
+  Result:=BytesToStr(FileSize);
+end;
+
+function TfrmMain.GetUrlFileSize(aURL: string): string;
+var
+    FileSize: integer;
+    ResponseStream : TStringStream; //返回信息
+    IdHTTP: TidHttp;
+       function BytesToStr(const i64Size: Int64): string;
+      const
+        i64GB = 1024 * 1024 * 1024;
+        i64MB = 1024 * 1024;
+        i64KB = 1024;
+      begin
+        if i64Size div i64GB > 0 then
+         Result := Format('%.2f GB ', [i64Size / i64GB])
+        else if i64Size div i64MB > 0 then
+         Result := Format('%.2f MB ', [i64Size / i64MB])
+        else if i64Size div i64KB > 0 then
+         Result := Format('%.2f KB ', [i64Size / i64KB])
+         else
+          Result := IntToStr(i64Size) + ' Byte';
+      end;
+begin
+      IdHTTP:= Tidhttp.Create(nil);
+      IdHTTP.Request.UserAgent := 'Mozilla/3.0 (compatible;)';
+      ResponseStream := TStringStream.Create('');
+      IdHTTP.Get(aURL,ResponseStream);
+      FileSize :=ResponseStream.Size;
+      IdHTTP.Disconnect;
+      Result :=BytesToStr(FileSize);
+
+end;
+
+procedure TfrmMain.lstWebsiteItemsClick(Sender: TObject);
+begin
+
+end;
+
+end.
